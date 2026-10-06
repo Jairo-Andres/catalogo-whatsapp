@@ -19,6 +19,10 @@ export default async function AdminTiendasPage() {
   // Si la función de uso no está (migración 6 sin aplicar), la página sigue funcionando sin esos datos.
   const usage = new Map((usageRes.data ?? []).map((u) => [u.store_id, u]));
   const usageOk = !usageRes.error;
+  if (usageRes.error) {
+    // Para diagnosticar en los logs de Vercel (código de Postgres/PostgREST y mensaje).
+    console.error("admin_store_usage falló", usageRes.error.code, usageRes.error.message);
+  }
   const totalBytes = (usageRes.data ?? []).reduce((n, u) => n + Number(u.storage_bytes), 0);
   const pct = Math.min(100, (totalBytes / STORAGE_LIMIT_BYTES) * 100);
   const pctText = new Intl.NumberFormat("es-CO", { maximumFractionDigits: 1 }).format(pct);

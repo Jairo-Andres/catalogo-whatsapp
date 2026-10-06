@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient, getSession } from "@/lib/supabase/server";
+import { moveInOrder, sortOrderChanges } from "@/lib/reorder";
 import { LIMITS } from "@/lib/site";
 import { BUCKET, isOwnStorageUrl, storagePath } from "@/lib/storage";
 import { fieldErrors, productSchema } from "@/lib/validators";
@@ -133,4 +134,35 @@ export async function deleteProduct(formData: FormData) {
   }
   revalidateStore(store.slug);
   redirect("/panel/productos?guardado=eliminado");
+}
+
+/**
+ * Sube o baja un producto en el orden de la tienda (sort_order 0, 1, 2…).
+ * Solo toca productos de la tienda de quien está en sesión; la RLS lo vuelve a comprobar.
+ */
+export async function moveProduct(formData: FormData) {
+  const store = await myStore();
+  const id = String(formData.get("id") ?? "");
+  const direction = String(formData.get("direction") ?? "");
+  if (direction !== "subir" && direction !== "bajar") return;
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("products")
+    .select("id, sort_order")
+    .eq("store_id", store.id)
+    .order("sort_order")
+    .order("created_at", { ascending: false });
+  const current = data ?? [];
+  const next = moveInOrder(
+    current.map((p) => p.id),
+    id,
+    direction,
+  );
+  if (!next) return;
+  await Promise.all(
+    sortOrderChanges(current, next).map((c) =>
+      supabase.from("products").update({ sort_order: c.sort_order }).eq("id", c.id).eq("store_id", store.id),
+    ),
+  );
+  revalidateStore(store.slug);
 }

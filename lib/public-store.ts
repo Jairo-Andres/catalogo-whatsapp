@@ -54,7 +54,9 @@ export async function getActiveStores(opts: { category?: string; q?: string; lim
   const supabase = await createClient();
   let query = supabase
     .from("stores")
-    .select(`slug, name, city, logo_url, featured, store_categories${opts.category ? "!inner" : ""}(name, slug)`)
+    .select(
+      `slug, name, city, logo_url, banner_url, featured, store_categories${opts.category ? "!inner" : ""}(name, slug)`,
+    )
     .eq("status", "activa")
     .order("featured", { ascending: false })
     .order("created_at", { ascending: false })

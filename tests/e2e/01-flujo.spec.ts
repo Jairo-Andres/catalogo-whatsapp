@@ -349,3 +349,52 @@ test("mi cuenta: cambiar la contraseña (y volver a la original) y pedir cambio 
   await page.getByRole("button", { name: "Cambiar correo" }).click();
   await expect(page.getByText(/Te enviamos un enlace para confirmar el cambio/)).toBeVisible();
 });
+
+test("ordenar productos con Subir y Bajar; la tienda pública respeta el orden", async ({ page }) => {
+  await login(page, seller, "/panel/productos");
+  const list = page.locator("ol > li");
+  await expect(list.first()).toContainText("Brownie"); // el más nuevo va primero
+  await expect(page.getByRole("button", { name: "Subir Brownie" })).toBeDisabled();
+  await page.getByRole("button", { name: "Subir Torta de chocolate" }).click();
+  await expect(list.first()).toContainText("Torta de chocolate");
+  await expect(page.getByRole("button", { name: "Subir Torta de chocolate" })).toBeDisabled();
+
+  const rows = await sql<{ name: string; sort_order: number }>(
+    `select name, sort_order from public.products where store_id = $1 order by sort_order`,
+    [storeId],
+  );
+  expect(rows.map((r) => r.name)).toEqual(["Torta de chocolate", "Brownie"]);
+
+  await page.goto(`/${slug}`);
+  const cards = page.getByRole("region", { name: "Productos" }).getByRole("listitem");
+  await expect(cards.first()).toContainText("Torta de chocolate");
+});
+
+test("resumen: productos más vistos; tienda: copiar el link", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await login(page, seller, "/panel");
+  const top = page.getByRole("region", { name: "Productos más vistos (30 días)" });
+  // El cliente abrió la página de la torta en una prueba anterior.
+  await expect(top.getByRole("row", { name: /Torta de chocolate/ })).toBeVisible();
+
+  await page.goto("/panel/tienda");
+  await page.getByRole("button", { name: "Copiar link" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Link copiado" })).toBeVisible();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(`http://localhost:3000/${slug}`);
+});
+
+test("cerrar sesión está en Cuenta (no en la barra) y pide confirmación", async ({ page }) => {
+  await login(page, seller, "/panel");
+  await expect(page.getByRole("button", { name: /Salir|Cerrar sesión/ })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: /Ver mi tienda/ })).toBeVisible();
+  await page.getByRole("navigation", { name: "Panel" }).getByRole("link", { name: "Cuenta" }).click();
+  // Si cancela, sigue con sesión.
+  page.once("dialog", (d) => d.dismiss());
+  await page.getByRole("button", { name: "Cerrar sesión" }).click();
+  await expect(page).toHaveURL(/\/panel\/cuenta/);
+  page.once("dialog", (d) => d.accept());
+  await page.getByRole("button", { name: "Cerrar sesión" }).click();
+  await expect(page).toHaveURL("http://localhost:3000/");
+  await page.goto("/panel");
+  await expect(page).toHaveURL(/\/login/);
+});

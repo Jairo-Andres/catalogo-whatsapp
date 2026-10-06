@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Pencil, Plus } from "lucide-react";
+import { MoveButtons } from "@/components/panel/move-buttons";
 import { MarkSold, StatusSelect } from "@/components/panel/product-row-actions";
 import { ButtonLink, buttonClass } from "@/components/ui/button";
 import { FormMessage } from "@/components/ui/field";
@@ -46,40 +47,53 @@ export default async function ProductosPage({ searchParams }: PageProps<"/panel/
           </Link>
         </div>
       ) : (
-        <ul className="grid gap-3">
-          {products.map((p) => (
-            <li key={p.id} className="ja-card grid-cols-[4rem_1fr] items-center gap-x-4 sm:grid-cols-[4rem_1fr_auto]">
-              <ProductThumb url={p.image_url} className="size-16 rounded-md" />
-              <div className="min-w-0">
-                <p className="truncate font-bold">{p.name}</p>
-                <p className="text-sm">
-                  {p.sale_price != null ? (
-                    <>
-                      <s className="text-fg-muted">{formatCOP(p.price)}</s> <strong>{formatCOP(p.sale_price)}</strong>
-                    </>
-                  ) : (
-                    <strong>{formatCOP(p.price)}</strong>
-                  )}
-                  {p.stock !== null && <span className="text-fg-muted"> · Stock {p.stock}</span>}
-                  {p.is_unique && <span className="text-fg-muted"> · Único</span>}
-                </p>
-              </div>
-              <div className="col-span-2 flex flex-wrap items-center gap-2 sm:col-span-1 sm:justify-end">
-                <StatusSelect id={p.id} status={p.status} name={p.name} />
-                <MarkSold
-                  id={p.id}
-                  name={p.name}
-                  stock={p.stock}
-                  isUnique={p.is_unique}
-                  disabled={p.status === "vendido" || (p.stock !== null && p.stock === 0)}
-                />
-                <Link href={`/panel/productos/${p.id}`} className={buttonClass("ghost", "sm")}>
-                  <Pencil aria-hidden="true" className="size-4" /> Editar<span className="sr-only"> {p.name}</span>
-                </Link>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <>
+          <p className="text-sm text-fg-muted">
+            Usa las flechas para decidir qué productos salen primero en tu tienda. Los agotados y vendidos siempre van
+            al final.
+          </p>
+          <ol className="grid gap-3">
+            {products.map((p, i) => (
+              <li
+                key={p.id}
+                className="ja-card grid-cols-[auto_4rem_1fr] items-center gap-x-3 sm:grid-cols-[auto_4rem_1fr_auto] sm:gap-x-4"
+              >
+                <MoveButtons id={p.id} name={p.name} isFirst={i === 0} isLast={i === products.length - 1} />
+                <ProductThumb url={p.image_url} className="size-16 rounded-xl" />
+                <div className="min-w-0">
+                  <p className="truncate font-bold">
+                    <span className="mr-1.5 font-mono text-sm text-fg-muted">{i + 1}.</span>
+                    {p.name}
+                  </p>
+                  <p className="text-sm">
+                    {p.sale_price != null ? (
+                      <>
+                        <s className="text-fg-muted">{formatCOP(p.price)}</s> <strong>{formatCOP(p.sale_price)}</strong>
+                      </>
+                    ) : (
+                      <strong>{formatCOP(p.price)}</strong>
+                    )}
+                    {p.stock !== null && <span className="text-fg-muted"> · Stock {p.stock}</span>}
+                    {p.is_unique && <span className="text-fg-muted"> · Único</span>}
+                  </p>
+                </div>
+                <div className="col-span-3 flex flex-wrap items-center gap-2 sm:col-span-1 sm:justify-end">
+                  <StatusSelect id={p.id} status={p.status} name={p.name} />
+                  <MarkSold
+                    id={p.id}
+                    name={p.name}
+                    stock={p.stock}
+                    isUnique={p.is_unique}
+                    disabled={p.status === "vendido" || (p.stock !== null && p.stock === 0)}
+                  />
+                  <Link href={`/panel/productos/${p.id}`} className={buttonClass("ghost", "sm")}>
+                    <Pencil aria-hidden="true" className="size-4" /> Editar<span className="sr-only"> {p.name}</span>
+                  </Link>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </>
       )}
     </div>
   );

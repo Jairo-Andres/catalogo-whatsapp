@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ExternalLink, LogOut, UserRound } from "lucide-react";
+import { ExternalLink, Eye, UserRound } from "lucide-react";
 import { PanelNav } from "@/components/panel/panel-nav";
 import { BrandLink } from "@/components/site-header";
 import { StatusBadge, STORE_STATUS } from "@/components/ui/badge";
-import { signOut } from "@/lib/actions/auth";
+import { buttonClass } from "@/components/ui/button";
 import { requireUser } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Panel", robots: { index: false, follow: false } };
@@ -25,25 +25,24 @@ export default async function PanelLayout({ children }: LayoutProps<"/panel">) {
               </StatusBadge>
             )}
             {store && (
-              <Link href={`/${store.slug}`} className="mt-nav__link gap-1.5" target="_blank">
-                <ExternalLink aria-hidden="true" className="size-4" />
-                <span className="sr-only sm:not-sr-only">Ver tienda</span>
-                <span className="sr-only"> (abre en otra pestaña)</span>
+              <Link
+                href={`/${store.slug}`}
+                className={buttonClass("primary", "sm", "mt-btn-dark mt-pill whitespace-nowrap")}
+                target="_blank"
+              >
+                <Eye aria-hidden="true" className="size-4" />
+                Ver mi tienda
+                <ExternalLink aria-hidden="true" className="size-3.5 opacity-80" />
+                <span className="sr-only"> como cliente (abre en otra pestaña)</span>
               </Link>
             )}
-            {/* Sin tienda (o admin) no hay menú del panel: la cuenta se abre desde aquí. */}
+            {/* Sin tienda (o admin) no hay menú del panel: la cuenta (y cerrar sesión) se abre desde aquí. */}
             {!store && (
               <Link href="/panel/cuenta" className="mt-nav__link gap-1.5">
                 <UserRound aria-hidden="true" className="size-4" />
                 Cuenta
               </Link>
             )}
-            <form action={signOut}>
-              <button type="submit" className="mt-nav__link gap-1.5">
-                <LogOut aria-hidden="true" className="size-4" />
-                <span className="sr-only sm:not-sr-only">Salir</span>
-              </button>
-            </form>
           </div>
         </div>
       </header>

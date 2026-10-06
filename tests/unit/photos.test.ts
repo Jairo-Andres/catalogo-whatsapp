@@ -320,3 +320,46 @@ describe("borrador del formulario de producto", () => {
     expect(loadDraft("k")).toBeNull();
   });
 });
+
+describe("orden de productos", () => {
+  it("sube y baja una posición; no se sale de los extremos", async () => {
+    const { moveInOrder } = await import("@/lib/reorder");
+    expect(moveInOrder(["a", "b", "c"], "c", "subir")).toEqual(["a", "c", "b"]);
+    expect(moveInOrder(["a", "b", "c"], "a", "bajar")).toEqual(["b", "a", "c"]);
+    expect(moveInOrder(["a", "b", "c"], "a", "subir")).toBeNull();
+    expect(moveInOrder(["a", "b", "c"], "c", "bajar")).toBeNull();
+    expect(moveInOrder(["a", "b"], "x", "subir")).toBeNull();
+  });
+
+  it("solo actualiza los productos cuyo sort_order cambia", async () => {
+    const { sortOrderChanges } = await import("@/lib/reorder");
+    // Todos en 0 (como quedan al crearse): la primera vez se numeran todos menos el primero.
+    expect(
+      sortOrderChanges(
+        [
+          { id: "a", sort_order: 0 },
+          { id: "b", sort_order: 0 },
+          { id: "c", sort_order: 0 },
+        ],
+        ["b", "a", "c"],
+      ),
+    ).toEqual([
+      { id: "a", sort_order: 1 },
+      { id: "c", sort_order: 2 },
+    ]);
+    // Ya numerados: un intercambio toca solo dos.
+    expect(
+      sortOrderChanges(
+        [
+          { id: "a", sort_order: 0 },
+          { id: "b", sort_order: 1 },
+          { id: "c", sort_order: 2 },
+        ],
+        ["a", "c", "b"],
+      ),
+    ).toEqual([
+      { id: "c", sort_order: 1 },
+      { id: "b", sort_order: 2 },
+    ]);
+  });
+});

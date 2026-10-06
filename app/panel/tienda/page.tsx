@@ -1,3 +1,4 @@
+import { CopyStoreLink } from "@/components/panel/copy-link";
 import { StoreForm } from "@/components/panel/store-form";
 import { requireUser } from "@/lib/auth";
 import { siteUrl } from "@/lib/site";
@@ -19,6 +20,7 @@ export default async function TiendaPage() {
             : "Solo una pantalla. Podrás cambiar todo después."}
         </p>
       </div>
+      {session.store && <CopyStoreLink url={`${siteUrl()}/${session.store.slug}`} storeName={session.store.name} />}
       <StoreForm store={session.store} categories={categories ?? []} siteUrl={siteUrl()} />
     </div>
   );

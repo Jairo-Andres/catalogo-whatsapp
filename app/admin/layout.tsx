@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { LogOut } from "lucide-react";
 import { BrandLink } from "@/components/site-header";
-import { signOut } from "@/lib/actions/auth";
 import { requireAdmin } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Administración", robots: { index: false, follow: false } };
@@ -27,12 +25,6 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
             <Link href="/" className="mt-nav__link">
               Sitio
             </Link>
-            <form action={signOut}>
-              <button type="submit" className="mt-nav__link gap-1.5">
-                <LogOut aria-hidden="true" className="size-4" />
-                Salir
-              </button>
-            </form>
           </nav>
         </div>
       </header>

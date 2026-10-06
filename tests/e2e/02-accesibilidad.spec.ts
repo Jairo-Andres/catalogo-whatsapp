@@ -90,6 +90,7 @@ for (const vp of VIEWPORTS) {
         "/panel/tienda",
         "/panel/ventas",
         "/panel/estadisticas",
+        "/panel/cuenta",
       ]) {
         await page.goto(url);
         await audit(page, `${url} ${vp.name} ${scheme}`);

@@ -78,6 +78,8 @@ Pruebas completas: `npx supabase db reset && npm run test:db` (modo Postgres sim
 
 ## Qué revisar si algo se cae
 
+- **El admin dice que no pudo cargar el uso por tienda** (o una función nueva responde 400): en los logs de Vercel sale el código del error. Si la función se creó con SQL a mano, ejecuta `notify pgrst, 'reload schema';` en el editor SQL de Supabase para que la API la vea. La migración 6 corrige además el tipo de la columna de espacio (`::bigint`); sin eso Postgres responde 42804.
+
 | Síntoma                                               | Qué revisar                                                                                                                                                                    |
 | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | La web muestra "Algo salió mal" o tarda mucho         | ¿El proyecto de Supabase está **pausado**? En el plan gratis se pausa tras unos días sin actividad: entra al panel y dale _Restore_. Luego revisa _Logs → API_.                |

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { VisitsChart } from "@/components/panel/charts";
 import { StatCard } from "@/components/panel/stat-card";
+import { TopProducts } from "@/components/panel/top-products";
 import { requireStore } from "@/lib/auth";
 import { formatCOP, formatDay } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
@@ -22,10 +23,17 @@ export default async function PanelPage({ searchParams }: PageProps<"/panel">) {
   const { store } = await requireStore("/panel");
   const days = (await searchParams).dias === "7" ? 7 : 30;
   const supabase = await createClient();
-  const [{ data: summary }, { data: byDay }] = await Promise.all([
+  const [{ data: summary }, { data: byDay }, { data: topRaw }] = await Promise.all([
     supabase.rpc("store_summary", { p_store_id: store.id }),
     supabase.rpc("stats_by_day", { p_store_id: store.id, p_days: days }),
+    supabase.rpc("stats_top_products", { p_store_id: store.id, p_days: 30 }),
   ]);
+  const top = (topRaw ?? []).map((t) => ({
+    product_id: t.product_id,
+    name: t.name,
+    views: Number(t.views),
+    in_orders: Number(t.in_orders),
+  }));
   const s = (summary ?? {}) as Partial<Summary>;
   const n = (k: keyof Summary) => Number(s[k] ?? 0);
   const rate = n("visitas_30d") > 0 ? Math.round((n("clics_pedir_30d") / n("visitas_30d")) * 100) : 0;
@@ -77,6 +85,7 @@ export default async function PanelPage({ searchParams }: PageProps<"/panel">) {
         </div>
         <VisitsChart data={chart} title={`Visitantes y clics en Pedir, últimos ${days} días`} />
       </section>
+      <TopProducts items={top} days={30} />
       {n("unidades_vendidas_30d") === 0 && (
         <p className="ja-card">
           <strong>Marca tus ventas y verás cuánto has vendido este mes.</strong>{" "}
