@@ -13,7 +13,8 @@
     "test:e2e": "playwright test",
     "db:start": "supabase start",
     "db:reset": "supabase db reset",
-    "db:advisors": "supabase db advisors --local --type all --level warn --fail-on warn"
+    "db:advisors": "supabase db advisors --local --type all --level warn --fail-on warn",
+    "test:api": "vitest run --project api"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
@@ -28,6 +29,7 @@
     "react-dom": "19.2.8",
     "react-hook-form": "^7.89.0",
     "recharts": "^3.10.1",
+    "server-only": "^0.0.1",
     "tailwind-merge": "^3.7.0",
     "zod": "^4.6.5",
     "zustand": "^5.0.15"

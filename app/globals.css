@@ -1,26 +1,139 @@
 @import "tailwindcss";
+/* Identidad "Rutas + Cota" sin modificar (copias de identidad-visual/fase-2). */
+@import "./tokens.css";
+@import "./components.css";
 
+/*
+ * Tailwind lee los nombres de los tokens. Los valores de aquí son solo de respaldo:
+ * Tailwind los pone en @layer theme y tokens.css (sin capa) los reemplaza, incluido
+ * el modo oscuro. Así bg-surface, text-fg-muted, etc. siempre usan el token vivo.
+ */
+@theme {
+  --color-*: initial;
+  --color-bg: #ffffff;
+  --color-surface: #f4f5f7;
+  --color-surface-2: #e9ebef;
+  --color-border: #d5d8dd;
+  --color-border-strong: #7d858e;
+  --color-fg: #1a1d21;
+  --color-fg-muted: #5c636b;
+  --color-accent: #1959d1;
+  --color-accent-hover: #1447a8;
+  --color-on-accent: #ffffff;
+  --color-focus: #1959d1;
+  --color-cota: #8a5a2b;
+  --color-route-b: #1959d1;
+  --color-route-d: #f2b705;
+  --color-route-q: #c2185b;
+  --color-on-route-d: #1a1d21;
+  --color-ink-b: #1959d1;
+  --color-ink-d: #7a5b00;
+  --color-ink-q: #c2185b;
+  --color-status-good: #1a7f37;
+  --color-status-good-bg: #e7f5ec;
+  --color-status-warn: #8f6200;
+  --color-status-warn-bg: #fff4d6;
+  --color-status-bad: #c4320a;
+  --color-status-bad-bg: #fdede8;
+  --color-chart-1: #1959d1;
+  --color-chart-2: #e8a200;
+
+  --font-*: initial;
+  --font-display: "Overpass", sans-serif;
+  --font-body: "Atkinson Hyperlegible", sans-serif;
+  --font-mono: "Atkinson Hyperlegible Mono", monospace;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+  --radius-pill: 999px;
+
+  --shadow-sm: 0 1px 2px rgb(26 29 33 / 0.08);
+  --shadow-md: 0 2px 8px rgb(26 29 33 / 0.1);
+  --shadow-lg: 0 8px 24px rgb(26 29 33 / 0.18);
+}
+
+/* Las fuentes llegan con next/font (sin pedir nada a Google en el navegador). */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --font-display: var(--font-overpass), "Overpass", "Arial Narrow", Arial, sans-serif;
+  --font-body: var(--font-atkinson), "Atkinson Hyperlegible", Verdana, system-ui, sans-serif;
+  --font-mono: var(--font-atkinson-mono), "Atkinson Hyperlegible Mono", ui-monospace, Consolas, monospace;
+  /* Botón de WhatsApp: verde "bueno" de la marca (5,1:1 con blanco; en oscuro, texto oscuro). */
+  --wa-bg: var(--status-good);
+  --wa-fg: #ffffff;
+  --wa-bg-hover: #146c2e;
 }
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :root:not([data-theme="light"]) {
+    --wa-fg: #121417;
+    --wa-bg-hover: #56c968;
   }
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+}
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font: var(--weight-regular) var(--text-base) / var(--leading-normal) var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+::selection {
+  background: color-mix(in srgb, var(--color-accent) 25%, transparent);
+}
+
+.ja-btn--wa { background: var(--wa-bg); color: var(--wa-fg); }
+.ja-btn--wa:hover { background: var(--wa-bg-hover); }
+.ja-btn--danger { background: transparent; color: var(--status-bad); border-color: currentColor; }
+.ja-btn--danger:hover { background: var(--status-bad-bg); }
+.ja-btn--sm { padding-inline: var(--space-3); font-size: var(--text-sm); }
+
+/* Campos de formulario */
+.field-input {
+  width: 100%;
+  min-height: var(--tap-min);
+  padding: 0.55rem 0.75rem;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  border: var(--border-1) solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  font: inherit;
+}
+.field-input:focus-visible { outline-offset: 0; }
+.field-input[aria-invalid="true"] { border-color: var(--status-bad); border-width: 2px; }
+.field-input::placeholder { color: var(--color-fg-muted); opacity: 1; }
+
+/* Línea de ruta (el producto del catálogo usa la línea D, la de datos) */
+.route-line {
+  height: var(--route-stroke);
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--route-b) 0 33%, var(--route-d) 33% 66%, var(--route-q) 66%);
+}
+
+/* Entrada suave de tarjetas; desactivada con prefers-reduced-motion por los tokens */
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } }
+.rise { animation: rise var(--duration-slow) var(--ease-out) both; }
+@media (prefers-reduced-motion: reduce) {
+  .rise { animation: none; }
+}
+
+.sr-only-focusable:not(:focus):not(:focus-within) {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+/* Etiqueta de descuento: color de la línea Q con su texto de contraste (claro y oscuro) */
+.tag-discount {
+  display: inline-block;
+  padding: 0.15em 0.45em;
+  border-radius: var(--radius-sm);
+  background: var(--route-q);
+  color: var(--on-route-q);
+  font: var(--weight-bold) var(--text-xs) / 1.2 var(--font-body);
+  font-variant-numeric: tabular-nums;
 }

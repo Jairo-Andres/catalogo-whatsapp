@@ -180,9 +180,10 @@ returns boolean language sql security definer stable set search_path = '' as $$
 $$;
 
 -- El dueño necesita SELECT sobre sus propios archivos para reemplazarlos o borrarlos.
+-- El admin los ve y los borra al eliminar una tienda.
 create policy "catalogo: ver mis archivos" on storage.objects
   for select to authenticated
-  using (bucket_id = 'catalogo' and public.is_my_store_folder(name));
+  using (bucket_id = 'catalogo' and (public.is_my_store_folder(name) or (select public.is_admin())));
 
 create policy "catalogo: subir en la carpeta de mi tienda" on storage.objects
   for insert to authenticated
@@ -195,7 +196,7 @@ create policy "catalogo: actualizar en mi carpeta" on storage.objects
 
 create policy "catalogo: borrar en mi carpeta" on storage.objects
   for delete to authenticated
-  using (bucket_id = 'catalogo' and public.is_my_store_folder(name));
+  using (bucket_id = 'catalogo' and (public.is_my_store_folder(name) or (select public.is_admin())));
 
 -- Las funciones de ayuda las usan las políticas; anon solo necesita las de lectura.
 revoke execute on function public.owns_store(uuid) from public, anon;

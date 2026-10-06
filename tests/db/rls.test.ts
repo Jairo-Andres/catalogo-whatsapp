@@ -409,5 +409,7 @@ describe("storage (bucket catalogo)", () => {
     const seenByAnon = await as(db, ANON, async () => (await db.query(`select name from storage.objects`)).rowCount);
     expect(seenByA).toBe(0);
     expect(seenByAnon).toBe(0);
+    const seenByAdmin = await as(db, ADMIN(), async () => (await db.query(`select name from storage.objects`)).rowCount);
+    expect(seenByAdmin).toBe(1);
   });
 });
