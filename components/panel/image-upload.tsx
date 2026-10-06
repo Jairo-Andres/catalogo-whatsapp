@@ -22,6 +22,7 @@ export function ImageUpload({ storeId, folder, name, label, defaultUrl, maxSide,
   const [status, setStatus] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [detail, setDetail] = useState<string>("");
+  const [canRepick, setCanRepick] = useState(false);
   const [busy, setBusy] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const id = useId();
@@ -31,6 +32,7 @@ export function ImageUpload({ storeId, folder, name, label, defaultUrl, maxSide,
     if (!picked) return;
     setError("");
     setDetail("");
+    setCanRepick(false);
     // Algunas galerías mandan las HEIC sin tipo: se aceptan por la extensión.
     if (!picked.type.startsWith("image/") && !isHeic(picked)) {
       e.target.value = "";
@@ -45,7 +47,7 @@ export function ImageUpload({ storeId, folder, name, label, defaultUrl, maxSide,
     const info = `${picked.type || "sin tipo"}, ${(picked.size / 1024 / 1024).toFixed(1)} MB`;
     setBusy(true);
 
-    // 1. Copia en memoria antes que nada: el archivo de la cámara puede dejar de leerse después.
+    // 1. Copia en memoria antes que nada: en Chrome Android el archivo elegido puede dejar de leerse.
     let file: File;
     try {
       setStatus("Leyendo la foto…");
@@ -53,7 +55,10 @@ export function ImageUpload({ storeId, folder, name, label, defaultUrl, maxSide,
     } catch (err) {
       console.error("Error al leer la foto", err);
       setStatus("");
-      setError("La galería todavía está guardando la foto. Espera unos segundos y vuelve a elegirla.");
+      setError(
+        "El celular no dejó leer esta foto. Vuelve a elegirla; si sigue pasando, elígela desde «Archivos» o «Mis archivos» en vez de la Galería.",
+      );
+      setCanRepick(true);
       setDetail(`${info} · ${errorText(err)}`);
       setBusy(false);
       e.target.value = "";
@@ -131,7 +136,7 @@ export function ImageUpload({ storeId, folder, name, label, defaultUrl, maxSide,
             ref={inputRef}
             id={id}
             type="file"
-            accept="image/*,.heic,.heif"
+            accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif"
             className="sr-only"
             tabIndex={-1}
             aria-label={`${label}: elegir archivo`}
@@ -168,6 +173,11 @@ export function ImageUpload({ storeId, folder, name, label, defaultUrl, maxSide,
         <p role="alert" className="text-sm font-bold text-status-bad">
           {error}
         </p>
+      )}
+      {error && canRepick && !busy && (
+        <Button variant="secondary" size="sm" className="justify-self-start" onClick={() => inputRef.current?.click()}>
+          Elegir de nuevo
+        </Button>
       )}
       {error && detail && <p className="text-xs break-words text-fg-muted">Detalle técnico: {detail}</p>}
     </fieldset>

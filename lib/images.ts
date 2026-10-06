@@ -4,29 +4,69 @@ import { LIMITS } from "./site";
 const DIRECT_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const DIRECT_MAX_BYTES = 2 * 1024 * 1024; // límite del bucket
 const QUALITIES = [0.85, 0.75, 0.65, 0.55];
-const READ_RETRY_MS = [400, 800, 1200, 1600];
+/** Una foto parcial sirve si llegó casi completa: el final de una "foto en movimiento" es el video. */
+const PARTIAL_MIN_RATIO = 0.5;
 
 /**
  * Copia en memoria el archivo que entrega el selector. En Chrome Android ese File apunta al
- * archivo real del celular; si la cámara o la galería lo modifican después de elegirlo
- * (terminan de guardarlo, le agregan metadatos o la parte de "foto en movimiento"),
- * leerlo falla con NotReadableError y subirlo falla con "Failed to fetch".
- * Se lee de una vez, con reintentos, y desde ahí todo usa la copia.
+ * archivo real del celular, y Chrome guarda su tamaño y fecha al elegirlo; si la galería de
+ * Samsung o la sincronización lo tocan, o el proveedor reporta otro tamaño (pasa con las
+ * "fotos en movimiento", que llevan un video pegado al final), la lectura falla con
+ * NotReadableError y la subida con "Failed to fetch". Reintentar el mismo File no sirve,
+ * así que se prueban varias formas de leerlo; si ninguna sirve, hay que volver a elegir la foto.
  */
 export async function readIntoMemory(file: File): Promise<File> {
-  let lastError: unknown;
-  for (let attempt = 0; attempt <= READ_RETRY_MS.length; attempt++) {
-    try {
-      const buffer = await file.arrayBuffer();
-      if (buffer.byteLength === 0) throw new Error("El archivo llegó vacío.");
-      return new File([buffer], file.name || "foto", { type: file.type, lastModified: file.lastModified });
-    } catch (e) {
-      lastError = e;
-      console.warn(`No se pudo leer la foto (intento ${attempt + 1})`, e);
-      if (attempt < READ_RETRY_MS.length) await wait(READ_RETRY_MS[attempt]);
-    }
+  const failures: string[] = [];
+  const make = (data: BlobPart) =>
+    new File([data], file.name || "foto", { type: file.type, lastModified: file.lastModified });
+
+  // 1. Lectura normal.
+  try {
+    const buffer = await file.arrayBuffer();
+    if (buffer.byteLength > 0) return make(buffer);
+    failures.push("arrayBuffer: vacío");
+  } catch (e) {
+    failures.push(`arrayBuffer: ${errorText(e)}`);
   }
-  throw lastError;
+
+  // 2. Por partes con stream: si falla al final, lo leído hasta ahí suele traer la foto completa
+  //    (en una foto en movimiento lo que falta es el video). Se comprueba al decodificar.
+  try {
+    const chunks: Uint8Array[] = [];
+    let total = 0;
+    const reader = file.stream().getReader();
+    try {
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+        total += value.byteLength;
+      }
+    } catch (e) {
+      failures.push(`stream (${total} de ${file.size} bytes): ${errorText(e)}`);
+      if (total < file.size * PARTIAL_MIN_RATIO) throw e;
+    }
+    if (total > 0) return make(new Blob(chunks as BlobPart[], { type: file.type }));
+  } catch (e) {
+    if (!failures.some((f) => f.startsWith("stream"))) failures.push(`stream: ${errorText(e)}`);
+  }
+
+  // 3. FileReader (otro camino interno de Chrome).
+  try {
+    const buffer = await new Promise<ArrayBuffer>((resolve, reject) => {
+      const fr = new FileReader();
+      fr.onload = () => resolve(fr.result as ArrayBuffer);
+      fr.onerror = () => reject(fr.error);
+      fr.readAsArrayBuffer(file);
+    });
+    if (buffer.byteLength > 0) return make(buffer);
+  } catch (e) {
+    failures.push(`FileReader: ${errorText(e)}`);
+  }
+
+  const error = new Error(failures.join(" | "));
+  error.name = "NotReadableError";
+  throw error;
 }
 
 /**
@@ -183,10 +223,6 @@ function imageSize(source: Blob): Promise<{ width: number; height: number }> {
 
 function toBlob(canvas: HTMLCanvasElement, type: string, quality: number): Promise<Blob | null> {
   return new Promise((resolve) => canvas.toBlob(resolve, type, quality));
-}
-
-function wait(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /** Texto corto de un error, para mostrarlo como detalle técnico. */
