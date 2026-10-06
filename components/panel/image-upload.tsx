@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useRef, useState } from "react";
-import { compressToWebp, imageExtension, isHeic } from "@/lib/images";
+import { compressToWebp, errorText, imageExtension, isHeic, readIntoMemory } from "@/lib/images";
 import { createClient } from "@/lib/supabase/client";
 import { BUCKET } from "@/lib/storage";
 import { Button } from "@/components/ui/button";
@@ -21,36 +21,61 @@ export function ImageUpload({ storeId, folder, name, label, defaultUrl, maxSide,
   const [url, setUrl] = useState<string | null>(defaultUrl ?? null);
   const [status, setStatus] = useState<string>("");
   const [error, setError] = useState<string>("");
+  const [detail, setDetail] = useState<string>("");
   const [busy, setBusy] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const id = useId();
 
   async function onChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
+    const picked = e.target.files?.[0];
+    if (!picked) return;
     setError("");
+    setDetail("");
     // Algunas galerías mandan las HEIC sin tipo: se aceptan por la extensión.
-    if (!file.type.startsWith("image/") && !isHeic(file)) {
+    if (!picked.type.startsWith("image/") && !isHeic(picked)) {
+      e.target.value = "";
       setError("El archivo debe ser una imagen (JPG, PNG, WebP o HEIC).");
       return;
     }
-    if (file.size > 60 * 1024 * 1024) {
+    if (picked.size > 60 * 1024 * 1024) {
+      e.target.value = "";
       setError("La imagen pesa más de 60 MB. Elige otra.");
       return;
     }
+    const info = `${picked.type || "sin tipo"}, ${(picked.size / 1024 / 1024).toFixed(1)} MB`;
     setBusy(true);
+
+    // 1. Copia en memoria antes que nada: el archivo de la cámara puede dejar de leerse después.
+    let file: File;
+    try {
+      setStatus("Leyendo la foto…");
+      file = await readIntoMemory(picked);
+    } catch (err) {
+      console.error("Error al leer la foto", err);
+      setStatus("");
+      setError("La galería todavía está guardando la foto. Espera unos segundos y vuelve a elegirla.");
+      setDetail(`${info} · ${errorText(err)}`);
+      setBusy(false);
+      e.target.value = "";
+      return;
+    }
+    e.target.value = "";
+
+    // 2. Comprimir (siempre sobre la copia en memoria).
     let image: File;
     try {
       setStatus("Comprimiendo la foto…");
       image = await compressToWebp(file, maxSide);
-    } catch (e) {
-      console.error("Error al procesar la foto", e);
+    } catch (err) {
+      console.error("Error al procesar la foto", err);
       setStatus("");
       setError("No pudimos procesar esta foto. Prueba con otra o tómale captura de pantalla.");
+      setDetail(`${info} · ${errorText(err)}`);
       setBusy(false);
       return;
     }
+
+    // 3. Subir; si falla la red, se reintenta una vez.
     try {
       setStatus("Subiendo…");
       // randomUUID solo existe en https/localhost; en otro caso basta un nombre aleatorio.
@@ -59,18 +84,26 @@ export function ImageUpload({ storeId, folder, name, label, defaultUrl, maxSide,
           ? crypto.randomUUID()
           : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
       const path = `${storeId}/${folder}/${fileId}.${imageExtension(image.type)}`;
+      const body = new Blob([await image.arrayBuffer()], { type: image.type });
       const supabase = createClient();
-      const { error: upErr } = await supabase.storage
-        .from(BUCKET)
-        .upload(path, image, { contentType: image.type, cacheControl: "31536000", upsert: false });
+      const upload = () =>
+        supabase.storage
+          .from(BUCKET)
+          .upload(path, body, { contentType: image.type, cacheControl: "31536000", upsert: false });
+      let { error: upErr } = await upload();
+      if (upErr && /fetch|network/i.test(upErr.message)) {
+        await new Promise((r) => setTimeout(r, 1000));
+        ({ error: upErr } = await upload());
+      }
       if (upErr) throw upErr;
       setUrl(supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl);
-      setStatus(`Foto lista (${Math.round(image.size / 1024)} KB, antes ${Math.round(file.size / 1024)} KB).`);
-    } catch (e) {
-      console.error("Error al subir la foto", e);
+      setStatus(`Foto lista (${Math.round(image.size / 1024)} KB, antes ${Math.round(picked.size / 1024)} KB).`);
+    } catch (err) {
+      console.error("Error al subir la foto", err);
       setStatus("");
-      const detail = e instanceof Error && e.message ? ` (${e.message})` : "";
-      setError(`No pudimos subir la foto${detail}. Intenta de nuevo.`);
+      const message = err instanceof Error && err.message ? ` (${err.message})` : "";
+      setError(`No pudimos subir la foto${message}. Intenta de nuevo.`);
+      setDetail(`${info} · ${errorText(err)}`);
     } finally {
       setBusy(false);
     }
@@ -136,6 +169,7 @@ export function ImageUpload({ storeId, folder, name, label, defaultUrl, maxSide,
           {error}
         </p>
       )}
+      {error && detail && <p className="text-xs break-words text-fg-muted">Detalle técnico: {detail}</p>}
     </fieldset>
   );
 }
