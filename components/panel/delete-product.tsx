@@ -13,7 +13,9 @@ export function DeleteProduct({ id, name }: { id: string; name: string }) {
       className="border-t border-border pt-6"
     >
       <input type="hidden" name="id" value={id} />
-      <Button type="submit" variant="danger">Eliminar producto</Button>
+      <Button type="submit" variant="danger">
+        Eliminar producto
+      </Button>
     </form>
   );
 }

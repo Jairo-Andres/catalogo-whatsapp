@@ -25,7 +25,11 @@ export async function generateMetadata({ params }: PageProps<"/[slug]/[productId
   const data = await load(params);
   if (!data) return { title: "Producto no encontrado" };
   const { store, product } = data;
-  const description = `${formatCOP(effectivePrice(product))} en ${store.name}. ${product.description ?? "Pide por WhatsApp."}`.slice(0, 200);
+  const description =
+    `${formatCOP(effectivePrice(product))} en ${store.name}. ${product.description ?? "Pide por WhatsApp."}`.slice(
+      0,
+      200,
+    );
   return {
     title: `${product.name} · ${store.name}`,
     description,
@@ -56,18 +60,39 @@ export default async function ProductPage({ params }: PageProps<"/[slug]/[produc
         <ArrowLeft aria-hidden="true" className="size-5" /> {store.name}
       </Link>
       <article className="grid gap-6 md:grid-cols-2 md:gap-10">
-        <ProductThumb url={product.image_url} className="aspect-square w-full rounded-lg" sizes="(min-width: 768px) 50vw, 100vw" priority />
+        <ProductThumb
+          url={product.image_url}
+          className="aspect-square w-full rounded-lg"
+          sizes="(min-width: 768px) 50vw, 100vw"
+          priority
+        />
         <div className="grid content-start gap-4">
           <h1 className="ja-display text-3xl sm:text-4xl">{product.name}</h1>
           <Price price={product.price} salePrice={product.sale_price} size="lg" />
-          {!available && <StatusBadge tone={status.tone} className="w-fit">{status.label}</StatusBadge>}
+          {!available && (
+            <StatusBadge tone={status.tone} className="w-fit">
+              {status.label}
+            </StatusBadge>
+          )}
           {product.description && <p className="whitespace-pre-line">{product.description}</p>}
           {available && (
-            <AddToCart storeId={store.id} productId={product.id} name={product.name} unitPrice={effectivePrice(product)} size="lg" className="w-full sm:w-auto" />
+            <AddToCart
+              storeId={store.id}
+              productId={product.id}
+              name={product.name}
+              unitPrice={effectivePrice(product)}
+              size="lg"
+              className="w-full sm:w-auto"
+            />
           )}
-          <a href={whatsappLink("", `Mira esto en ${store.name}: ${product.name} ${url}?src=whatsapp`)}
-            target="_blank" rel="noopener" className="ja-btn ja-btn--secondary w-full sm:w-auto">
-            <Share2 aria-hidden="true" className="size-5" /> Compartir por WhatsApp<span className="sr-only"> (abre WhatsApp)</span>
+          <a
+            href={whatsappLink("", `Mira esto en ${store.name}: ${product.name} ${url}?src=whatsapp`)}
+            target="_blank"
+            rel="noopener"
+            className="ja-btn ja-btn--secondary w-full sm:w-auto"
+          >
+            <Share2 aria-hidden="true" className="size-5" /> Compartir por WhatsApp
+            <span className="sr-only"> (abre WhatsApp)</span>
           </a>
         </div>
       </article>

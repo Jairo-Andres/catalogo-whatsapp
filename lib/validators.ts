@@ -69,7 +69,10 @@ export const productSchema = z
       .optional()
       .transform((v) => (v === "" || v === undefined ? null : v)),
     stock: z
-      .union([z.literal(""), z.coerce.number().int("Stock: sin decimales").min(0, "Stock: no puede ser negativo").max(100000)])
+      .union([
+        z.literal(""),
+        z.coerce.number().int("Stock: sin decimales").min(0, "Stock: no puede ser negativo").max(100000),
+      ])
       .optional()
       .transform((v) => (v === "" || v === undefined ? null : v)),
     is_unique: z

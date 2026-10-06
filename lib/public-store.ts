@@ -28,7 +28,9 @@ export const getStoreBySlug = cache(async (slug: string): Promise<PublicStore | 
   const supabase = await createClient();
   const { data } = await supabase
     .from("stores")
-    .select("id, slug, name, description, city, whatsapp, logo_url, banner_url, status, offers_delivery, offers_pickup, store_categories(name)")
+    .select(
+      "id, slug, name, description, city, whatsapp, logo_url, banner_url, status, offers_delivery, offers_pickup, store_categories(name)",
+    )
     .eq("slug", slug)
     .maybeSingle();
   if (!data) return null;
@@ -59,7 +61,10 @@ export async function getActiveStores(opts: { category?: string; q?: string; lim
     .limit(opts.limit ?? 60);
   if (opts.category) query = query.eq("store_categories.slug", opts.category);
   if (opts.q) {
-    const term = opts.q.replace(/[%_,()]/g, " ").trim().slice(0, 40);
+    const term = opts.q
+      .replace(/[%_,()]/g, " ")
+      .trim()
+      .slice(0, 40);
     if (term) query = query.or(`name.ilike.%${term}%,city.ilike.%${term}%`);
   }
   const { data } = await query;

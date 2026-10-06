@@ -1,7 +1,21 @@
 /** Rutas del sitio que una tienda no puede usar como slug (igual que en la base de datos). */
 export const RESERVED_SLUGS = [
-  "panel", "admin", "login", "registro", "tiendas", "terminos", "privacidad", "api",
-  "_next", "static", "auth", "salir", "sitemap", "robots", "favicon",
+  "panel",
+  "admin",
+  "login",
+  "registro",
+  "tiendas",
+  "terminos",
+  "privacidad",
+  "api",
+  "_next",
+  "static",
+  "auth",
+  "salir",
+  "sitemap",
+  "robots",
+  "favicon",
+  "marca",
 ] as const;
 
 export const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;

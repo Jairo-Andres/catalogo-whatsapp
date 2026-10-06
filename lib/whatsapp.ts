@@ -26,15 +26,16 @@ export type OrderInfo = {
 
 /** Quita asteriscos/guiones bajos/virgulillas para que no rompan el formato de WhatsApp. */
 function clean(text: string): string {
-  return text.replace(/[*_~`]/g, "").replace(/\s+/g, " ").trim();
+  return text
+    .replace(/[*_~`]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 /** Mensaje del pedido según la plantilla de la sección 7 del documento. */
 export function buildOrderMessage(order: OrderInfo): string {
   const total = order.lines.reduce((sum, l) => sum + l.quantity * l.unitPrice, 0);
-  const lines = order.lines.map(
-    (l) => `• ${l.quantity} x ${clean(l.name)} — ${formatCOP(l.quantity * l.unitPrice)}`,
-  );
+  const lines = order.lines.map((l) => `• ${l.quantity} x ${clean(l.name)} — ${formatCOP(l.quantity * l.unitPrice)}`);
   const out = [
     `Hola, quiero hacer un pedido en *${clean(order.storeName)}* 🛍️`,
     "",

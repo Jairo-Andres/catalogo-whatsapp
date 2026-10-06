@@ -26,9 +26,7 @@ export async function saveStore(_prev: FormState, formData: FormData): Promise<F
 
   const { error } = current
     ? await supabase.from("stores").update(data).eq("id", current.id)
-    : await supabase
-        .from("stores")
-        .insert({ ...data, logo_url: null, banner_url: null, owner_id: session.userId });
+    : await supabase.from("stores").insert({ ...data, logo_url: null, banner_url: null, owner_id: session.userId });
 
   if (error) {
     if (error.code === "23505") {

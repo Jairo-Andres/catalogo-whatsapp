@@ -12,7 +12,10 @@ export const metadata: Metadata = {
 export default async function RegistroPage() {
   if (await getSession()) redirect("/panel");
   return (
-    <AuthShell title="Crea tu tienda gratis" intro="Primero tu cuenta; luego, en una sola pantalla, los datos de tu tienda.">
+    <AuthShell
+      title="Crea tu tienda gratis"
+      intro="Primero tu cuenta; luego, en una sola pantalla, los datos de tu tienda."
+    >
       <AuthForm mode="registro" />
     </AuthShell>
   );

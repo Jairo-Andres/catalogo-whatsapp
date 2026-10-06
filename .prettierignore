@@ -1,0 +1,7 @@
+lib/database.types.ts
+supabase/
+.next/
+node_modules/
+app/tokens.css
+app/components.css
+public/

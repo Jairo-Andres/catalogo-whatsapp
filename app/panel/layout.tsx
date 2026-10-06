@@ -23,7 +23,11 @@ export default async function PanelLayout({ children }: LayoutProps<"/panel">) {
             <span className="max-w-[12rem] truncate">{store?.name ?? "Mi panel"}</span>
           </Link>
           <div className="flex items-center gap-1">
-            {status && <StatusBadge tone={status.tone} className="hidden sm:inline-flex">{status.label}</StatusBadge>}
+            {status && (
+              <StatusBadge tone={status.tone} className="hidden sm:inline-flex">
+                {status.label}
+              </StatusBadge>
+            )}
             {store && (
               <Link href={`/${store.slug}`} className={buttonClass("ghost", "sm")} target="_blank">
                 <ExternalLink aria-hidden="true" className="size-4" />
@@ -50,7 +54,8 @@ export default async function PanelLayout({ children }: LayoutProps<"/panel">) {
             <div className="mb-6 rounded-lg border border-border bg-status-warn-bg p-4 text-status-warn" role="note">
               <p className="font-bold">Tu tienda está en revisión.</p>
               <p className="text-fg">
-                Cuando el administrador la apruebe será pública. Mientras tanto puedes subir productos y ver la vista previa.
+                Cuando el administrador la apruebe será pública. Mientras tanto puedes subir productos y ver la vista
+                previa.
               </p>
             </div>
           )}

@@ -11,7 +11,14 @@ import { Input, Textarea } from "@/components/ui/field";
 
 type Catalog = Record<string, { name: string; unitPrice: number; available: boolean }>;
 type Props = {
-  store: { id: string; name: string; whatsapp: string; offers_delivery: boolean; offers_pickup: boolean; status: string };
+  store: {
+    id: string;
+    name: string;
+    whatsapp: string;
+    offers_delivery: boolean;
+    offers_pickup: boolean;
+    status: string;
+  };
   storeUrl: string;
   catalog: Catalog;
 };
@@ -54,7 +61,9 @@ export function CartBar({ store, storeUrl, catalog }: Props) {
   const dropped = cart.items.length - lines.length;
   const count = lines.reduce((n, l) => n + l.quantity, 0);
   const total = lines.reduce((n, l) => n + l.quantity * l.unitPrice, 0);
-  const deliveryOptions = [store.offers_delivery && "domicilio", store.offers_pickup && "recoger"].filter(Boolean) as ("domicilio" | "recoger")[];
+  const deliveryOptions = [store.offers_delivery && "domicilio", store.offers_pickup && "recoger"].filter(Boolean) as (
+    "domicilio" | "recoger"
+  )[];
   const delivery = deliveryOptions.length === 1 ? deliveryOptions[0] : cart.delivery;
 
   const message = buildOrderMessage({
@@ -81,80 +90,148 @@ export function CartBar({ store, storeUrl, catalog }: Props) {
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-bg/95 p-3 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-bg/85">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
           <p className="ja-num">
-            <span className="font-bold">{count} {count === 1 ? "producto" : "productos"}</span>
+            <span className="font-bold">
+              {count} {count === 1 ? "producto" : "productos"}
+            </span>
             <span className="text-fg-muted"> · {formatCOP(total)}</span>
           </p>
-          <Button onClick={() => { setSent(false); setOpen(true); }} aria-haspopup="dialog">
+          <Button
+            onClick={() => {
+              setSent(false);
+              setOpen(true);
+            }}
+            aria-haspopup="dialog"
+          >
             <ShoppingBag aria-hidden="true" className="size-5" /> Ver pedido
           </Button>
         </div>
       </div>
 
-      <dialog ref={dialogRef} aria-labelledby={titleId} onClose={() => setOpen(false)}
-        className="m-0 mt-auto max-h-[92dvh] w-full max-w-none rounded-t-lg border border-border bg-bg p-0 text-fg shadow-lg backdrop:bg-black/50 sm:m-auto sm:max-w-lg sm:rounded-lg">
+      <dialog
+        ref={dialogRef}
+        aria-labelledby={titleId}
+        onClose={() => setOpen(false)}
+        className="m-0 mt-auto max-h-[92dvh] w-full max-w-none rounded-t-lg border border-border bg-bg p-0 text-fg shadow-lg backdrop:bg-black/50 sm:m-auto sm:max-w-lg sm:rounded-lg"
+      >
         <div className="grid gap-4 p-5">
           <div className="flex items-center justify-between gap-2">
-            <h2 id={titleId} className="font-display text-2xl font-black">Tu pedido</h2>
+            <h2 id={titleId} className="font-display text-2xl font-black">
+              Tu pedido
+            </h2>
             <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
-              <X aria-hidden="true" className="size-5" /><span className="sr-only">Cerrar</span>
+              <X aria-hidden="true" className="size-5" />
+              <span className="sr-only">Cerrar</span>
             </Button>
           </div>
 
           {dropped > 0 && (
             <p className="rounded-md bg-status-warn-bg p-3 text-sm text-status-warn">
-              {dropped === 1 ? "Un producto ya no está disponible y se quitó" : `${dropped} productos ya no están disponibles y se quitaron`} del pedido.
+              {dropped === 1
+                ? "Un producto ya no está disponible y se quitó"
+                : `${dropped} productos ya no están disponibles y se quitaron`}{" "}
+              del pedido.
             </p>
           )}
 
           <ul className="grid gap-3">
             {lines.map((l) => (
-              <li key={l.productId} className="grid grid-cols-[1fr_auto] items-center gap-2 border-b border-border pb-3">
+              <li
+                key={l.productId}
+                className="grid grid-cols-[1fr_auto] items-center gap-2 border-b border-border pb-3"
+              >
                 <div className="min-w-0">
                   <p className="font-bold">{l.name}</p>
-                  <p className="ja-num text-sm text-fg-muted">{formatCOP(l.unitPrice)} c/u · {formatCOP(l.unitPrice * l.quantity)}</p>
+                  <p className="ja-num text-sm text-fg-muted">
+                    {formatCOP(l.unitPrice)} c/u · {formatCOP(l.unitPrice * l.quantity)}
+                  </p>
                 </div>
                 <div className="flex items-center gap-1">
-                  <Button variant="secondary" size="sm" className="px-2" onClick={() => setQuantity(store.id, l.productId, l.quantity - 1)}>
-                    <Minus aria-hidden="true" className="size-4" /><span className="sr-only">Quitar uno de {l.name}</span>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="px-2"
+                    onClick={() => setQuantity(store.id, l.productId, l.quantity - 1)}
+                  >
+                    <Minus aria-hidden="true" className="size-4" />
+                    <span className="sr-only">Quitar uno de {l.name}</span>
                   </Button>
-                  <span className="ja-num w-8 text-center font-bold" aria-label={`Cantidad de ${l.name}`}>{l.quantity}</span>
-                  <Button variant="secondary" size="sm" className="px-2" onClick={() => setQuantity(store.id, l.productId, l.quantity + 1)}>
-                    <Plus aria-hidden="true" className="size-4" /><span className="sr-only">Agregar uno de {l.name}</span>
+                  <span className="ja-num w-8 text-center font-bold" aria-label={`Cantidad de ${l.name}`}>
+                    {l.quantity}
+                  </span>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="px-2"
+                    onClick={() => setQuantity(store.id, l.productId, l.quantity + 1)}
+                  >
+                    <Plus aria-hidden="true" className="size-4" />
+                    <span className="sr-only">Agregar uno de {l.name}</span>
                   </Button>
                   <Button variant="ghost" size="sm" className="px-2" onClick={() => remove(store.id, l.productId)}>
-                    <Trash2 aria-hidden="true" className="size-4" /><span className="sr-only">Eliminar {l.name}</span>
+                    <Trash2 aria-hidden="true" className="size-4" />
+                    <span className="sr-only">Eliminar {l.name}</span>
                   </Button>
                 </div>
               </li>
             ))}
           </ul>
-          <p className="ja-num flex justify-between text-lg"><span className="font-bold">Total</span><strong>{formatCOP(total)}</strong></p>
+          <p className="ja-num flex justify-between text-lg">
+            <span className="font-bold">Total</span>
+            <strong>{formatCOP(total)}</strong>
+          </p>
 
           <div className="grid gap-1.5">
-            <label htmlFor={nameId} className="font-bold">Tu nombre <span className="font-normal text-fg-muted">(opcional)</span></label>
-            <Input id={nameId} autoComplete="given-name" maxLength={60} value={cart.customerName}
-              onChange={(e) => setInfo(store.id, { customerName: e.target.value })} />
+            <label htmlFor={nameId} className="font-bold">
+              Tu nombre <span className="font-normal text-fg-muted">(opcional)</span>
+            </label>
+            <Input
+              id={nameId}
+              autoComplete="given-name"
+              maxLength={60}
+              value={cart.customerName}
+              onChange={(e) => setInfo(store.id, { customerName: e.target.value })}
+            />
           </div>
           {deliveryOptions.length > 1 && (
             <fieldset className="grid gap-2">
               <legend className="mb-1 font-bold">Entrega</legend>
               {deliveryOptions.map((opt) => (
                 <label key={opt} className="flex min-h-11 items-center gap-3">
-                  <input type="radio" name="delivery" value={opt} checked={cart.delivery === opt}
-                    onChange={() => setInfo(store.id, { delivery: opt })} className="size-5 accent-[var(--color-accent)]" />
+                  <input
+                    type="radio"
+                    name="delivery"
+                    value={opt}
+                    checked={cart.delivery === opt}
+                    onChange={() => setInfo(store.id, { delivery: opt })}
+                    className="size-5 accent-[var(--color-accent)]"
+                  />
                   {opt === "domicilio" ? "Domicilio" : "Recoger en tienda"}
                 </label>
               ))}
             </fieldset>
           )}
           <div className="grid gap-1.5">
-            <label htmlFor={noteId} className="font-bold">Nota <span className="font-normal text-fg-muted">(opcional)</span></label>
-            <Textarea id={noteId} rows={2} maxLength={300} value={cart.note} onChange={(e) => setInfo(store.id, { note: e.target.value })} />
+            <label htmlFor={noteId} className="font-bold">
+              Nota <span className="font-normal text-fg-muted">(opcional)</span>
+            </label>
+            <Textarea
+              id={noteId}
+              rows={2}
+              maxLength={300}
+              value={cart.note}
+              onChange={(e) => setInfo(store.id, { note: e.target.value })}
+            />
           </div>
 
           <p className="text-sm text-fg-muted">El vendedor confirmará disponibilidad y precio final por WhatsApp.</p>
           {canOrder ? (
-            <a href={href} target="_blank" rel="noopener" onClick={onOrder} className="ja-btn ja-btn--wa ja-btn--lg w-full">
+            <a
+              href={href}
+              target="_blank"
+              rel="noopener"
+              onClick={onOrder}
+              className="ja-btn ja-btn--wa ja-btn--lg w-full"
+            >
               Pedir por WhatsApp<span className="sr-only"> (abre WhatsApp)</span>
             </a>
           ) : (
@@ -163,7 +240,16 @@ export function CartBar({ store, storeUrl, catalog }: Props) {
           {sent && (
             <div role="status" className="grid gap-2 rounded-md bg-surface p-3 text-sm">
               <p>¿Ya enviaste el mensaje en WhatsApp?</p>
-              <Button variant="secondary" size="sm" onClick={() => { clear(store.id); setOpen(false); }}>Sí, vaciar el carrito</Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  clear(store.id);
+                  setOpen(false);
+                }}
+              >
+                Sí, vaciar el carrito
+              </Button>
             </div>
           )}
         </div>

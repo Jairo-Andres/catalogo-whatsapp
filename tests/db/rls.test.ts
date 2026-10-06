@@ -74,8 +74,12 @@ beforeAll(async () => {
       db,
       actor,
       async () =>
-        (await db.query(`insert into public.products (store_id, ${values.split("|")[0]}) values ($1, ${values.split("|")[1]}) returning id`, [store]))
-          .rows[0].id as string,
+        (
+          await db.query(
+            `insert into public.products (store_id, ${values.split("|")[0]}) values ($1, ${values.split("|")[1]}) returning id`,
+            [store],
+          )
+        ).rows[0].id as string,
       { commit: true },
     );
   ids.stockProduct = await insertProduct(A(), ids.storeA, "name, price, sale_price, stock|'Torta', 10000, 8000, 5");
@@ -100,8 +104,10 @@ describe("perfiles", () => {
   });
 
   it("un vendedor puede cambiar su nombre", async () => {
-    const n = await as(db, A(), async () =>
-      (await db.query(`update public.profiles set full_name = 'Ana' where id = $1`, [ids.userA])).rowCount,
+    const n = await as(
+      db,
+      A(),
+      async () => (await db.query(`update public.profiles set full_name = 'Ana' where id = $1`, [ids.userA])).rowCount,
     );
     expect(n).toBe(1);
   });
@@ -129,8 +135,10 @@ describe("tiendas", () => {
   });
 
   it("un vendedor no puede editar la tienda de otro", async () => {
-    const n = await as(db, A(), async () =>
-      (await db.query(`update public.stores set name = 'Hackeada' where id = $1`, [ids.storeB])).rowCount,
+    const n = await as(
+      db,
+      A(),
+      async () => (await db.query(`update public.stores set name = 'Hackeada' where id = $1`, [ids.storeB])).rowCount,
     );
     expect(n).toBe(0);
   });
@@ -143,7 +151,9 @@ describe("tiendas", () => {
   });
 
   it("no se puede crear una tienda ya activa, ni una segunda tienda, ni a nombre de otro", async () => {
-    await db.query(`insert into auth.users (id, email) values ('00000000-0000-4000-8000-00000000000c', 'c@example.test')`);
+    await db.query(
+      `insert into auth.users (id, email) values ('00000000-0000-4000-8000-00000000000c', 'c@example.test')`,
+    );
     const C = { role: "authenticated" as const, uid: "00000000-0000-4000-8000-00000000000c" };
     const activa = await errorAs(
       db,
@@ -177,10 +187,16 @@ describe("tiendas", () => {
   });
 
   it("solo el admin elimina tiendas", async () => {
-    const n = await as(db, A(), async () => (await db.query(`delete from public.stores where id = $1`, [ids.storeA])).rowCount);
+    const n = await as(
+      db,
+      A(),
+      async () => (await db.query(`delete from public.stores where id = $1`, [ids.storeA])).rowCount,
+    );
     expect(n).toBe(0);
-    const nAdmin = await as(db, ADMIN(), async () =>
-      (await db.query(`delete from public.stores where id = $1`, [ids.storeB])).rowCount,
+    const nAdmin = await as(
+      db,
+      ADMIN(),
+      async () => (await db.query(`delete from public.stores where id = $1`, [ids.storeB])).rowCount,
     ); // se revierte al terminar
     expect(nAdmin).toBe(1);
   });
@@ -194,43 +210,72 @@ describe("productos", () => {
   });
 
   it("anon no puede crear, editar ni borrar productos", async () => {
-    expect((await errorAs(db, ANON, `insert into public.products (store_id, name, price) values ($1, 'x', 1)`, [ids.storeA]))?.code).toBe("42501");
+    expect(
+      (await errorAs(db, ANON, `insert into public.products (store_id, name, price) values ($1, 'x', 1)`, [ids.storeA]))
+        ?.code,
+    ).toBe("42501");
     expect((await errorAs(db, ANON, `update public.products set price = 1`))?.code).toBe("42501");
     expect((await errorAs(db, ANON, `delete from public.products`))?.code).toBe("42501");
   });
 
   it("un vendedor no puede crear productos en la tienda de otro", async () => {
-    const err = await errorAs(db, B(), `insert into public.products (store_id, name, price) values ($1, 'Intruso', 1)`, [ids.storeA]);
+    const err = await errorAs(
+      db,
+      B(),
+      `insert into public.products (store_id, name, price) values ($1, 'Intruso', 1)`,
+      [ids.storeA],
+    );
     expect(err?.code).toBe("42501");
   });
 
   it("un vendedor no puede editar ni borrar productos de otro", async () => {
-    const upd = await as(db, B(), async () =>
-      (await db.query(`update public.products set price = 1 where id = $1`, [ids.stockProduct])).rowCount,
+    const upd = await as(
+      db,
+      B(),
+      async () => (await db.query(`update public.products set price = 1 where id = $1`, [ids.stockProduct])).rowCount,
     );
     expect(upd).toBe(0);
-    const del = await as(db, B(), async () =>
-      (await db.query(`delete from public.products where id = $1`, [ids.stockProduct])).rowCount,
+    const del = await as(
+      db,
+      B(),
+      async () => (await db.query(`delete from public.products where id = $1`, [ids.stockProduct])).rowCount,
     );
     expect(del).toBe(0);
   });
 
   it("un vendedor no puede mover su producto a la tienda de otro", async () => {
-    const err = await errorAs(db, A(), `update public.products set store_id = $1 where id = $2`, [ids.storeB, ids.stockProduct]);
+    const err = await errorAs(db, A(), `update public.products set store_id = $1 where id = $2`, [
+      ids.storeB,
+      ids.stockProduct,
+    ]);
     expect(err?.code).toBe("42501");
   });
 
   it("el precio de oferta debe ser menor que el precio", async () => {
-    const err = await errorAs(db, A(), `update public.products set sale_price = 20000 where id = $1`, [ids.stockProduct]);
+    const err = await errorAs(db, A(), `update public.products set sale_price = 20000 where id = $1`, [
+      ids.stockProduct,
+    ]);
     expect(err?.code).toBe("23514");
   });
 
   it("imágenes: solo el dueño las agrega", async () => {
-    const ok = await as(db, A(), async () =>
-      (await db.query(`insert into public.product_images (product_id, url) values ($1, 'https://x/a.webp')`, [ids.stockProduct])).rowCount,
+    const ok = await as(
+      db,
+      A(),
+      async () =>
+        (
+          await db.query(`insert into public.product_images (product_id, url) values ($1, 'https://x/a.webp')`, [
+            ids.stockProduct,
+          ])
+        ).rowCount,
     );
     expect(ok).toBe(1);
-    const err = await errorAs(db, B(), `insert into public.product_images (product_id, url) values ($1, 'https://x/b.webp')`, [ids.stockProduct]);
+    const err = await errorAs(
+      db,
+      B(),
+      `insert into public.product_images (product_id, url) values ($1, 'https://x/b.webp')`,
+      [ids.stockProduct],
+    );
     expect(err?.code).toBe("42501");
   });
 });
@@ -242,7 +287,16 @@ describe("eventos (track_event)", () => {
     Number((await db.query(`select count(*) from public.events where ${where}`, params)).rows[0].count);
 
   it("anon no puede insertar eventos directamente ni leerlos", async () => {
-    expect((await errorAs(db, ANON, `insert into public.events (store_id, type, visitor_id) values ($1, 'clic_pedir', 'abcdefgh')`, [ids.storeA]))?.code).toBe("42501");
+    expect(
+      (
+        await errorAs(
+          db,
+          ANON,
+          `insert into public.events (store_id, type, visitor_id) values ($1, 'clic_pedir', 'abcdefgh')`,
+          [ids.storeA],
+        )
+      )?.code,
+    ).toBe("42501");
     expect((await errorAs(db, ANON, `select * from public.events`))?.code).toBe("42501");
   });
 
@@ -272,7 +326,9 @@ describe("eventos (track_event)", () => {
     await track(ANON, [ids.storeA, "visita_tienda", "con espacios y ;--", null, "directo"]);
     expect(await count(`visitor_id in ('visitante_prueba_02', 'corto')`)).toBe(0);
     await track(ANON, [ids.storeA, "visita_tienda", "visitante_prueba_03", null, "<script>"]);
-    expect((await db.query(`select source from public.events where visitor_id = 'visitante_prueba_03'`)).rows[0].source).toBe("directo");
+    expect(
+      (await db.query(`select source from public.events where visitor_id = 'visitante_prueba_03'`)).rows[0].source,
+    ).toBe("directo");
   });
 
   it("tope de 120 eventos por visitante cada 10 minutos", async () => {
@@ -281,17 +337,35 @@ describe("eventos (track_event)", () => {
   });
 
   it("un vendedor no lee los eventos de otro; el admin sí", async () => {
-    const b = await as(db, B(), async () => (await db.query(`select count(*) from public.events where store_id = $1`, [ids.storeA])).rows[0].count);
+    const b = await as(
+      db,
+      B(),
+      async () =>
+        (await db.query(`select count(*) from public.events where store_id = $1`, [ids.storeA])).rows[0].count,
+    );
     expect(Number(b)).toBe(0);
-    const adm = await as(db, ADMIN(), async () => (await db.query(`select count(*) from public.events where store_id = $1`, [ids.storeA])).rows[0].count);
+    const adm = await as(
+      db,
+      ADMIN(),
+      async () =>
+        (await db.query(`select count(*) from public.events where store_id = $1`, [ids.storeA])).rows[0].count,
+    );
     expect(Number(adm)).toBeGreaterThan(0);
   });
 
   it("stats_by_day devuelve un día por fila y ceros para tiendas ajenas", async () => {
-    const own = await as(db, A(), async () => (await db.query(`select * from public.stats_by_day($1, 7)`, [ids.storeA])).rows);
+    const own = await as(
+      db,
+      A(),
+      async () => (await db.query(`select * from public.stats_by_day($1, 7)`, [ids.storeA])).rows,
+    );
     expect(own).toHaveLength(7);
     expect(Number(own[6].visitors)).toBe(2); // visitante_prueba_01 y _03
-    const other = await as(db, B(), async () => (await db.query(`select * from public.stats_by_day($1, 7)`, [ids.storeA])).rows);
+    const other = await as(
+      db,
+      B(),
+      async () => (await db.query(`select * from public.stats_by_day($1, 7)`, [ids.storeA])).rows,
+    );
     expect(other.every((r) => Number(r.visitors) === 0 && Number(r.order_clicks) === 0)).toBe(true);
     expect((await errorAs(db, ANON, `select * from public.stats_by_day($1, 7)`, [ids.storeA]))?.code).toBe("42501");
   });
@@ -305,7 +379,11 @@ describe("ventas (mark_product_sold)", () => {
 
   it("guarda el precio de oferta vigente y descuenta stock", async () => {
     await sold(A(), ids.stockProduct, 2);
-    const sale = (await db.query(`select product_name, quantity, unit_price from public.sales where product_id = $1`, [ids.stockProduct])).rows[0];
+    const sale = (
+      await db.query(`select product_name, quantity, unit_price from public.sales where product_id = $1`, [
+        ids.stockProduct,
+      ])
+    ).rows[0];
     expect(sale).toEqual({ product_name: "Torta", quantity: 2, unit_price: "8000" });
     expect(await product(ids.stockProduct)).toEqual({ stock: 3, status: "disponible" });
   });
@@ -344,16 +422,28 @@ describe("ventas (mark_product_sold)", () => {
   });
 
   it("un vendedor no lee las ventas de otro", async () => {
-    const n = await as(db, B(), async () => (await db.query(`select 1 from public.sales where store_id = $1`, [ids.storeA])).rowCount);
+    const n = await as(
+      db,
+      B(),
+      async () => (await db.query(`select 1 from public.sales where store_id = $1`, [ids.storeA])).rowCount,
+    );
     expect(n).toBe(0);
   });
 
   it("resumen y ventas por mes cuadran con las ventas registradas", async () => {
-    const summary = await as(db, A(), async () => (await db.query(`select public.store_summary($1) as s`, [ids.storeA])).rows[0].s);
+    const summary = await as(
+      db,
+      A(),
+      async () => (await db.query(`select public.store_summary($1) as s`, [ids.storeA])).rows[0].s,
+    );
     // 2 + 3 tortas a 8.000, 1 ruana a 90.000, 7 brownies a 4.000
     expect(Number(summary.unidades_vendidas_30d)).toBe(13);
     expect(Number(summary.total_vendido_30d)).toBe(5 * 8000 + 90000 + 7 * 4000);
-    const months = await as(db, A(), async () => (await db.query(`select * from public.stats_sales_by_month($1)`, [ids.storeA])).rows);
+    const months = await as(
+      db,
+      A(),
+      async () => (await db.query(`select * from public.stats_sales_by_month($1)`, [ids.storeA])).rows,
+    );
     expect(Number(months.at(-1).revenue)).toBe(5 * 8000 + 90000 + 7 * 4000);
   });
 });
@@ -367,20 +457,30 @@ describe("administración", () => {
   });
 
   it("admin_stores lista todas las tiendas solo para el admin", async () => {
-    const rows = await as(db, ADMIN(), async () => (await db.query(`select slug, status from public.admin_stores()`)).rows);
+    const rows = await as(
+      db,
+      ADMIN(),
+      async () => (await db.query(`select slug, status from public.admin_stores()`)).rows,
+    );
     expect(rows[0]).toEqual({ slug: "tienda-b", status: "pendiente" });
     await expect(as(db, B(), () => db.query(`select public.admin_stores()`))).rejects.toThrow(/No autorizado/);
   });
 
   it("el admin puede suspender y destacar", async () => {
-    const n = await as(db, ADMIN(), async () =>
-      (await db.query(`update public.stores set status = 'suspendida', featured = true where id = $1`, [ids.storeA])).rowCount,
+    const n = await as(
+      db,
+      ADMIN(),
+      async () =>
+        (await db.query(`update public.stores set status = 'suspendida', featured = true where id = $1`, [ids.storeA]))
+          .rowCount,
     );
     expect(n).toBe(1);
   });
 
   it("los reportes no se pueden crear desde la web en el MVP", async () => {
-    const err = await errorAs(db, ANON, `insert into public.reports (store_id, reason) values ($1, 'spam')`, [ids.storeA]);
+    const err = await errorAs(db, ANON, `insert into public.reports (store_id, reason) values ($1, 'spam')`, [
+      ids.storeA,
+    ]);
     expect(err?.code).toBe("42501");
   });
 });
@@ -390,8 +490,14 @@ describe("storage (bucket catalogo)", () => {
     errorAs(db, actor, `insert into storage.objects (bucket_id, name, owner) values ('catalogo', $1, null)`, [name]);
 
   it("el bucket limita tamaño y tipos", async () => {
-    const b = (await db.query(`select public, file_size_limit, allowed_mime_types from storage.buckets where id = 'catalogo'`)).rows[0];
-    expect(b).toEqual({ public: true, file_size_limit: "2097152", allowed_mime_types: ["image/webp", "image/jpeg", "image/png"] });
+    const b = (
+      await db.query(`select public, file_size_limit, allowed_mime_types from storage.buckets where id = 'catalogo'`)
+    ).rows[0];
+    expect(b).toEqual({
+      public: true,
+      file_size_limit: "2097152",
+      allowed_mime_types: ["image/webp", "image/jpeg", "image/png"],
+    });
   });
 
   it("el vendedor sube solo en la carpeta de su tienda", async () => {
@@ -402,14 +508,26 @@ describe("storage (bucket catalogo)", () => {
   });
 
   it("nadie puede listar los archivos de otra tienda", async () => {
-    await as(db, B(), () => db.query(`insert into storage.objects (bucket_id, name) values ('catalogo', $1)`, [`${ids.storeB}/marca/logo.webp`]), {
-      commit: true,
-    });
+    await as(
+      db,
+      B(),
+      () =>
+        db.query(`insert into storage.objects (bucket_id, name) values ('catalogo', $1)`, [
+          `${ids.storeB}/marca/logo.webp`,
+        ]),
+      {
+        commit: true,
+      },
+    );
     const seenByA = await as(db, A(), async () => (await db.query(`select name from storage.objects`)).rowCount);
     const seenByAnon = await as(db, ANON, async () => (await db.query(`select name from storage.objects`)).rowCount);
     expect(seenByA).toBe(0);
     expect(seenByAnon).toBe(0);
-    const seenByAdmin = await as(db, ADMIN(), async () => (await db.query(`select name from storage.objects`)).rowCount);
+    const seenByAdmin = await as(
+      db,
+      ADMIN(),
+      async () => (await db.query(`select name from storage.objects`)).rowCount,
+    );
     expect(seenByAdmin).toBe(1);
   });
 });

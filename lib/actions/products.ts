@@ -95,7 +95,8 @@ export async function markSold(_prev: SoldState, formData: FormData): Promise<So
   const store = await myStore();
   const id = String(formData.get("id") ?? "");
   const quantity = Number(formData.get("quantity") ?? 1);
-  if (!Number.isInteger(quantity) || quantity < 1) return { error: "La cantidad debe ser un número entero mayor que 0." };
+  if (!Number.isInteger(quantity) || quantity < 1)
+    return { error: "La cantidad debe ser un número entero mayor que 0." };
   const supabase = await createClient();
   const { error } = await supabase.rpc("mark_product_sold", { p_product_id: id, p_quantity: quantity });
   if (error) {

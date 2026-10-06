@@ -24,11 +24,23 @@ export default async function VentasPage() {
       {rows.length === 0 ? (
         <p className="ja-card text-fg-muted">Aún no has registrado ventas. Usa “Marcar vendido” en tus productos.</p>
       ) : (
-        <div className="ja-table-wrap">
+        <div className="ja-table-wrap" role="region" aria-label="Historial de ventas" tabIndex={0}>
           <table className="ja-table">
             <caption className="sr-only">Historial de ventas (últimas 200)</caption>
             <thead>
-              <tr><th scope="col">Fecha</th><th scope="col">Producto</th><th scope="col" className="is-num">Cant.</th><th scope="col" className="is-num">Precio</th><th scope="col" className="is-num">Total</th></tr>
+              <tr>
+                <th scope="col">Fecha</th>
+                <th scope="col">Producto</th>
+                <th scope="col" className="is-num">
+                  Cant.
+                </th>
+                <th scope="col" className="is-num">
+                  Precio
+                </th>
+                <th scope="col" className="is-num">
+                  Total
+                </th>
+              </tr>
             </thead>
             <tbody>
               {rows.map((r) => (
@@ -42,7 +54,12 @@ export default async function VentasPage() {
               ))}
             </tbody>
             <tfoot>
-              <tr><th scope="row" colSpan={4} className="text-right">Total</th><td className="is-num whitespace-nowrap font-bold">{formatCOP(total)}</td></tr>
+              <tr>
+                <th scope="row" colSpan={4} className="text-right">
+                  Total
+                </th>
+                <td className="is-num whitespace-nowrap font-bold">{formatCOP(total)}</td>
+              </tr>
             </tfoot>
           </table>
         </div>

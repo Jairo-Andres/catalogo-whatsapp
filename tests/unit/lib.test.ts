@@ -35,6 +35,7 @@ describe("slugs", () => {
   it("rechaza reservados, cortos y con formato inválido", () => {
     expect(isValidSlug("dulces-marta")).toBe(true);
     expect(isValidSlug("admin")).toBe(false);
+    expect(isValidSlug("marca")).toBe(false);
     expect(isValidSlug("ab")).toBe(false);
     expect(isValidSlug("con--doble")).toBe(false);
     expect(isValidSlug("Mayus")).toBe(false);
@@ -113,7 +114,12 @@ import { productSchema, safeNext, storeSchema } from "@/lib/validators";
 
 describe("validaciones del servidor", () => {
   it("normaliza el WhatsApp y rechaza slugs reservados", () => {
-    const ok = storeSchema.safeParse({ name: "Dulces", slug: "dulces", whatsapp: "300 123 4567", whatsapp_public_ok: "on" });
+    const ok = storeSchema.safeParse({
+      name: "Dulces",
+      slug: "dulces",
+      whatsapp: "300 123 4567",
+      whatsapp_public_ok: "on",
+    });
     expect(ok.success && ok.data.whatsapp).toBe("573001234567");
     const bad = storeSchema.safeParse({ name: "Dulces", slug: "admin", whatsapp: "123", whatsapp_public_ok: "on" });
     expect(bad.success).toBe(false);

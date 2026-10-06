@@ -2,7 +2,15 @@ import { discountPercent, formatCOP } from "@/lib/format";
 import { cn } from "@/lib/cn";
 
 /** Precio tachado + precio de oferta + etiqueta "-20%". */
-export function Price({ price, salePrice, size = "md" }: { price: number; salePrice: number | null; size?: "md" | "lg" }) {
+export function Price({
+  price,
+  salePrice,
+  size = "md",
+}: {
+  price: number;
+  salePrice: number | null;
+  size?: "md" | "lg";
+}) {
   const pct = discountPercent(price, salePrice);
   const big = size === "lg" ? "text-2xl" : "text-lg";
   if (pct === null || salePrice === null) {

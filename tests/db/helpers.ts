@@ -9,8 +9,7 @@ import { Client } from "pg";
  *  - TEST_DB_MODE=supabase: Supabase local (`supabase start` + `supabase db reset`).
  *    TEST_DATABASE_URL = postgresql://postgres:postgres@127.0.0.1:54322/postgres
  */
-const SERVER_URL =
-  process.env.TEST_DATABASE_URL ?? "postgres://postgres:postgres@localhost:5432/postgres";
+const SERVER_URL = process.env.TEST_DATABASE_URL ?? "postgres://postgres:postgres@localhost:5432/postgres";
 const DB_NAME = "catalogo_test";
 
 function urlFor(db: string) {
@@ -60,8 +59,7 @@ export async function as<T>(
 ): Promise<T> {
   await db.query("begin");
   try {
-    const claims =
-      actor.role === "anon" ? { role: "anon" } : { role: "authenticated", sub: actor.uid };
+    const claims = actor.role === "anon" ? { role: "anon" } : { role: "authenticated", sub: actor.uid };
     await db.query("select set_config('request.jwt.claims', $1, true)", [JSON.stringify(claims)]);
     await db.query(`set local role ${actor.role}`);
     const out = await fn();

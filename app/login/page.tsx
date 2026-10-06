@@ -16,7 +16,9 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
       <AuthForm
         mode="login"
         next={next}
-        initialError={sp.error === "enlace" ? "El enlace no es válido o ya se usó. Inicia sesión o regístrate de nuevo." : undefined}
+        initialError={
+          sp.error === "enlace" ? "El enlace no es válido o ya se usó. Inicia sesión o regístrate de nuevo." : undefined
+        }
       />
     </AuthShell>
   );

@@ -42,9 +42,10 @@ export const useCart = create<CartState>()(
       setQuantity: (storeId, productId, quantity) => {
         const cart = get().carts[storeId] ?? empty;
         const q = Math.max(0, Math.min(Math.floor(quantity), LIMITS.cartQtyPerItem));
-        const items = q === 0
-          ? cart.items.filter((i) => i.productId !== productId)
-          : cart.items.map((i) => (i.productId === productId ? { ...i, quantity: q } : i));
+        const items =
+          q === 0
+            ? cart.items.filter((i) => i.productId !== productId)
+            : cart.items.map((i) => (i.productId === productId ? { ...i, quantity: q } : i));
         set({ carts: { ...get().carts, [storeId]: { ...cart, items } } });
       },
       remove: (storeId, productId) => get().setQuantity(storeId, productId, 0),

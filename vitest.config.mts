@@ -10,7 +10,10 @@ export default defineConfig({
         extends: true,
         test: { name: "db", include: ["tests/db/**/*.test.ts"], environment: "node", fileParallelism: false },
       },
-      { extends: true, test: { name: "api", include: ["tests/api/**/*.test.ts"], environment: "node", testTimeout: 20000 } },
+      {
+        extends: true,
+        test: { name: "api", include: ["tests/api/**/*.test.ts"], environment: "node", testTimeout: 20000 },
+      },
     ],
   },
 });

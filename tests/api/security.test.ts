@@ -14,14 +14,21 @@ const DB = process.env.SUPABASE_TEST_DB ?? "postgresql://postgres:postgres@127.0
 const run = Date.now().toString(36);
 
 type Sb = SupabaseClient<Database>;
-const client = (): Sb => createClient<Database>(URL_, KEY, { auth: { persistSession: false, autoRefreshToken: false } });
+const client = (): Sb =>
+  createClient<Database>(URL_, KEY, { auth: { persistSession: false, autoRefreshToken: false } });
 
 let a: Sb, b: Sb, anon: Sb, pg: Client;
-let storeA = "", storeB = "", productA = "";
+let storeA = "",
+  storeB = "",
+  productA = "";
 
 async function signUp(email: string) {
   const c = client();
-  const { error } = await c.auth.signUp({ email, password: "Clave-segura-123", options: { data: { full_name: email } } });
+  const { error } = await c.auth.signUp({
+    email,
+    password: "Clave-segura-123",
+    options: { data: { full_name: email } },
+  });
   if (error) throw error;
   return c;
 }
@@ -34,10 +41,28 @@ beforeAll(async () => {
   anon = client();
   const ua = (await a.auth.getUser()).data.user!.id;
   const ub = (await b.auth.getUser()).data.user!.id;
-  storeA = (await a.from("stores").insert({ owner_id: ua, slug: `api-a-${run}`, name: "API A", whatsapp: "573001234567" }).select("id").single()).data!.id;
-  storeB = (await b.from("stores").insert({ owner_id: ub, slug: `api-b-${run}`, name: "API B", whatsapp: "573001234568" }).select("id").single()).data!.id;
+  storeA = (
+    await a
+      .from("stores")
+      .insert({ owner_id: ua, slug: `api-a-${run}`, name: "API A", whatsapp: "573001234567" })
+      .select("id")
+      .single()
+  ).data!.id;
+  storeB = (
+    await b
+      .from("stores")
+      .insert({ owner_id: ub, slug: `api-b-${run}`, name: "API B", whatsapp: "573001234568" })
+      .select("id")
+      .single()
+  ).data!.id;
   await pg.query(`update public.stores set status = 'activa' where id = $1`, [storeA]); // aprobación del admin
-  productA = (await a.from("products").insert({ store_id: storeA, name: "Producto A", price: 10000, stock: 2 }).select("id").single()).data!.id;
+  productA = (
+    await a
+      .from("products")
+      .insert({ store_id: storeA, name: "Producto A", price: 10000, stock: 2 })
+      .select("id")
+      .single()
+  ).data!.id;
 });
 
 afterAll(async () => {
@@ -77,7 +102,13 @@ describe("API: aislamiento entre vendedores", () => {
   });
 
   it("anon no puede escribir en ninguna tabla", async () => {
-    expect((await anon.from("stores").insert({ owner_id: crypto.randomUUID(), slug: `x-${run}`, name: "X", whatsapp: "573001234567" })).error).not.toBeNull();
+    expect(
+      (
+        await anon
+          .from("stores")
+          .insert({ owner_id: crypto.randomUUID(), slug: `x-${run}`, name: "X", whatsapp: "573001234567" })
+      ).error,
+    ).not.toBeNull();
     expect((await anon.from("products").update({ price: 1 }).eq("id", productA)).error).not.toBeNull();
     expect((await anon.from("sales").select("id")).error).not.toBeNull();
     expect((await anon.from("profiles").select("id")).error).not.toBeNull();
@@ -90,7 +121,9 @@ describe("API: Storage", () => {
   it("cada vendedor sube solo en la carpeta de su tienda", async () => {
     expect((await a.storage.from("catalogo").upload(`${storeA}/productos/${run}.png`, png)).error).toBeNull();
     expect((await a.storage.from("catalogo").upload(`${storeB}/productos/${run}.png`, png)).error).not.toBeNull();
-    expect((await anon.storage.from("catalogo").upload(`${storeA}/productos/anon-${run}.png`, png)).error).not.toBeNull();
+    expect(
+      (await anon.storage.from("catalogo").upload(`${storeA}/productos/anon-${run}.png`, png)).error,
+    ).not.toBeNull();
   });
 
   it("rechaza archivos que no son imagen", async () => {
@@ -117,10 +150,16 @@ describe("API: Storage", () => {
 describe("API: analítica", () => {
   it("track_event funciona con la publishable key y no acepta inserciones directas", async () => {
     const visitor = `api${run}visitor`;
-    expect((await anon.rpc("track_event", { p_store_id: storeA, p_type: "visita_tienda", p_visitor_id: visitor })).error).toBeNull();
-    expect((await anon.rpc("track_event", { p_store_id: storeA, p_type: "visita_tienda", p_visitor_id: visitor })).error).toBeNull();
+    expect(
+      (await anon.rpc("track_event", { p_store_id: storeA, p_type: "visita_tienda", p_visitor_id: visitor })).error,
+    ).toBeNull();
+    expect(
+      (await anon.rpc("track_event", { p_store_id: storeA, p_type: "visita_tienda", p_visitor_id: visitor })).error,
+    ).toBeNull();
     const { rows } = await pg.query(`select count(*)::int as n from public.events where visitor_id = $1`, [visitor]);
     expect(rows[0].n).toBe(1);
-    expect((await anon.from("events").insert({ store_id: storeA, type: "clic_pedir", visitor_id: visitor })).error).not.toBeNull();
+    expect(
+      (await anon.from("events").insert({ store_id: storeA, type: "clic_pedir", visitor_id: visitor })).error,
+    ).not.toBeNull();
   });
 });

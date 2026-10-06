@@ -77,12 +77,35 @@ export function ImageUpload({ storeId, folder, name, label, defaultUrl, maxSide,
           )}
         </div>
         <div className="flex flex-wrap gap-2">
-          <input ref={inputRef} id={id} type="file" accept="image/*" className="sr-only" onChange={onChange} disabled={busy} />
-          <Button variant="secondary" size="sm" onClick={() => inputRef.current?.click()} disabled={busy} aria-describedby={`${id}-status`}>
+          <input
+            ref={inputRef}
+            id={id}
+            type="file"
+            accept="image/*"
+            className="sr-only"
+            tabIndex={-1}
+            aria-label={`${label}: elegir archivo`}
+            onChange={onChange}
+            disabled={busy}
+          />
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => inputRef.current?.click()}
+            disabled={busy}
+            aria-describedby={`${id}-status`}
+          >
             {busy ? "Procesando…" : url ? "Cambiar foto" : "Elegir foto"}
           </Button>
           {url && !busy && (
-            <Button variant="ghost" size="sm" onClick={() => { setUrl(null); setStatus("Foto quitada. Guarda para aplicar."); }}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setUrl(null);
+                setStatus("Foto quitada. Guarda para aplicar.");
+              }}
+            >
               Quitar
             </Button>
           )}
@@ -91,7 +114,11 @@ export function ImageUpload({ storeId, folder, name, label, defaultUrl, maxSide,
       <p id={`${id}-status`} role="status" aria-live="polite" className="text-sm text-fg-muted">
         {status}
       </p>
-      {error && <p role="alert" className="text-sm font-bold text-status-bad">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm font-bold text-status-bad">
+          {error}
+        </p>
+      )}
     </fieldset>
   );
 }

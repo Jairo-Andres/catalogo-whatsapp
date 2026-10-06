@@ -27,7 +27,9 @@ export default async function ProductosPage({ searchParams }: PageProps<"/panel/
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="ja-display text-3xl">Productos</h1>
-          <p className="text-fg-muted">{products.length} de {LIMITS.productsPerStore} del plan gratis.</p>
+          <p className="text-fg-muted">
+            {products.length} de {LIMITS.productsPerStore} del plan gratis.
+          </p>
         </div>
         <ButtonLink href="/panel/productos/nuevo">
           <Plus aria-hidden="true" className="size-5" /> Nuevo producto
@@ -39,7 +41,9 @@ export default async function ProductosPage({ searchParams }: PageProps<"/panel/
         <div className="ja-card place-items-center py-12 text-center">
           <p className="font-display text-xl font-black">Aún no tienes productos</p>
           <p className="text-fg-muted">Sube el primero: toma menos de un minuto.</p>
-          <Link href="/panel/productos/nuevo" className={buttonClass("primary")}>Subir mi primer producto</Link>
+          <Link href="/panel/productos/nuevo" className={buttonClass("primary")}>
+            Subir mi primer producto
+          </Link>
         </div>
       ) : (
         <ul className="grid gap-3">
@@ -50,7 +54,9 @@ export default async function ProductosPage({ searchParams }: PageProps<"/panel/
                 <p className="truncate font-bold">{p.name}</p>
                 <p className="text-sm">
                   {p.sale_price != null ? (
-                    <><s className="text-fg-muted">{formatCOP(p.price)}</s> <strong>{formatCOP(p.sale_price)}</strong></>
+                    <>
+                      <s className="text-fg-muted">{formatCOP(p.price)}</s> <strong>{formatCOP(p.sale_price)}</strong>
+                    </>
                   ) : (
                     <strong>{formatCOP(p.price)}</strong>
                   )}
@@ -60,8 +66,13 @@ export default async function ProductosPage({ searchParams }: PageProps<"/panel/
               </div>
               <div className="col-span-2 flex flex-wrap items-center gap-2 sm:col-span-1 sm:justify-end">
                 <StatusSelect id={p.id} status={p.status} name={p.name} />
-                <MarkSold id={p.id} name={p.name} stock={p.stock} isUnique={p.is_unique}
-                  disabled={p.status === "vendido" || (p.stock !== null && p.stock === 0)} />
+                <MarkSold
+                  id={p.id}
+                  name={p.name}
+                  stock={p.stock}
+                  isUnique={p.is_unique}
+                  disabled={p.status === "vendido" || (p.stock !== null && p.stock === 0)}
+                />
                 <Link href={`/panel/productos/${p.id}`} className={buttonClass("ghost", "sm")}>
                   <Pencil aria-hidden="true" className="size-4" /> Editar<span className="sr-only"> {p.name}</span>
                 </Link>

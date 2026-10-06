@@ -45,3 +45,8 @@ next-env.d.ts
 # pruebas e2e
 /test-results/
 /playwright-report/
+
+# fixtures generadas por las pruebas e2e
+/tests/e2e/.fixtures/
+
+supabase.env

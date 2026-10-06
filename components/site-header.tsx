@@ -22,7 +22,10 @@ export async function SiteHeader() {
   return (
     <header className="border-b border-border bg-bg">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2">
-        <Link href="/" className="flex min-h-11 items-center gap-2 font-display text-lg font-black no-underline">
+        <Link
+          href="/"
+          className="flex min-h-11 items-center gap-2 whitespace-nowrap font-display text-base font-black no-underline sm:text-lg"
+        >
           <BrandMark />
           <span>{SITE_NAME}</span>
         </Link>

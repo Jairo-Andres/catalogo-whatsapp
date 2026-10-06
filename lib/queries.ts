@@ -21,7 +21,12 @@ type RawProduct = Omit<ProductRow, "image_url"> & { product_images: { url: strin
 export function toProductRow(p: RawProduct): ProductRow {
   const { product_images, ...rest } = p;
   const first = [...(product_images ?? [])].sort((a, b) => a.position - b.position)[0];
-  return { ...rest, price: Number(rest.price), sale_price: rest.sale_price == null ? null : Number(rest.sale_price), image_url: first?.url ?? null };
+  return {
+    ...rest,
+    price: Number(rest.price),
+    sale_price: rest.sale_price == null ? null : Number(rest.sale_price),
+    image_url: first?.url ?? null,
+  };
 }
 
 export async function getStoreProducts(storeId: string): Promise<ProductRow[]> {

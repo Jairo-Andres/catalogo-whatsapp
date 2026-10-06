@@ -1,7 +1,7 @@
 @import "tailwindcss";
 /* Identidad "Rutas + Cota" sin modificar (copias de identidad-visual/fase-2). */
 @import "./tokens.css";
-@import "./components.css";
+@import "./components.css" layer(components);
 
 /*
  * Tailwind lee los nombres de los tokens. Los valores de aquí son solo de respaldo:
@@ -22,21 +22,6 @@
   --color-on-accent: #ffffff;
   --color-focus: #1959d1;
   --color-cota: #8a5a2b;
-  --color-route-b: #1959d1;
-  --color-route-d: #f2b705;
-  --color-route-q: #c2185b;
-  --color-on-route-d: #1a1d21;
-  --color-ink-b: #1959d1;
-  --color-ink-d: #7a5b00;
-  --color-ink-q: #c2185b;
-  --color-status-good: #1a7f37;
-  --color-status-good-bg: #e7f5ec;
-  --color-status-warn: #8f6200;
-  --color-status-warn-bg: #fff4d6;
-  --color-status-bad: #c4320a;
-  --color-status-bad-bg: #fdede8;
-  --color-chart-1: #1959d1;
-  --color-chart-2: #e8a200;
 
   --font-*: initial;
   --font-display: "Overpass", sans-serif;
@@ -51,6 +36,25 @@
   --shadow-sm: 0 1px 2px rgb(26 29 33 / 0.08);
   --shadow-md: 0 2px 8px rgb(26 29 33 / 0.1);
   --shadow-lg: 0 8px 24px rgb(26 29 33 / 0.18);
+}
+
+/* Tokens con otro prefijo (--ink-*, --status-*, --route-*, --chart-*): se enlazan en vivo. */
+@theme inline {
+  --color-route-b: var(--route-b);
+  --color-route-d: var(--route-d);
+  --color-route-q: var(--route-q);
+  --color-on-route-d: var(--on-route-d);
+  --color-ink-b: var(--ink-b);
+  --color-ink-d: var(--ink-d);
+  --color-ink-q: var(--ink-q);
+  --color-status-good: var(--status-good);
+  --color-status-good-bg: var(--status-good-bg);
+  --color-status-warn: var(--status-warn);
+  --color-status-warn-bg: var(--status-warn-bg);
+  --color-status-bad: var(--status-bad);
+  --color-status-bad-bg: var(--status-bad-bg);
+  --color-chart-1: var(--chart-1);
+  --color-chart-3: var(--chart-3);
 }
 
 /* Las fuentes llegan con next/font (sin pedir nada a Google en el navegador). */
@@ -88,52 +92,91 @@ body {
   background: color-mix(in srgb, var(--color-accent) 25%, transparent);
 }
 
-.ja-btn--wa { background: var(--wa-bg); color: var(--wa-fg); }
-.ja-btn--wa:hover { background: var(--wa-bg-hover); }
-.ja-btn--danger { background: transparent; color: var(--status-bad); border-color: currentColor; }
-.ja-btn--danger:hover { background: var(--status-bad-bg); }
-.ja-btn--sm { padding-inline: var(--space-3); font-size: var(--text-sm); }
+/* Clases propias en la capa components: las utilidades de Tailwind pueden ajustarlas. */
+@layer components {
+  .ja-btn--wa {
+    background: var(--wa-bg);
+    color: var(--wa-fg);
+  }
+  .ja-btn--wa:hover {
+    background: var(--wa-bg-hover);
+  }
+  .ja-btn--danger {
+    background: transparent;
+    color: var(--status-bad);
+    border-color: currentColor;
+  }
+  .ja-btn--danger:hover {
+    background: var(--status-bad-bg);
+  }
+  .ja-btn--sm {
+    padding-inline: var(--space-3);
+    font-size: var(--text-sm);
+  }
 
-/* Campos de formulario */
-.field-input {
-  width: 100%;
-  min-height: var(--tap-min);
-  padding: 0.55rem 0.75rem;
-  background: var(--color-bg);
-  color: var(--color-fg);
-  border: var(--border-1) solid var(--color-border-strong);
-  border-radius: var(--radius-md);
-  font: inherit;
-}
-.field-input:focus-visible { outline-offset: 0; }
-.field-input[aria-invalid="true"] { border-color: var(--status-bad); border-width: 2px; }
-.field-input::placeholder { color: var(--color-fg-muted); opacity: 1; }
+  /* Campos de formulario */
+  .field-input {
+    width: 100%;
+    min-height: var(--tap-min);
+    padding: 0.55rem 0.75rem;
+    background: var(--color-bg);
+    color: var(--color-fg);
+    border: var(--border-1) solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    font: inherit;
+  }
+  .field-input:focus-visible {
+    outline-offset: 0;
+  }
+  .field-input[aria-invalid="true"] {
+    border-color: var(--status-bad);
+    border-width: 2px;
+  }
+  .field-input::placeholder {
+    color: var(--color-fg-muted);
+    opacity: 1;
+  }
 
-/* Línea de ruta (el producto del catálogo usa la línea D, la de datos) */
-.route-line {
-  height: var(--route-stroke);
-  border-radius: var(--radius-pill);
-  background: linear-gradient(90deg, var(--route-b) 0 33%, var(--route-d) 33% 66%, var(--route-q) 66%);
-}
+  /* Línea de ruta con las tres líneas de la marca (B, D, Q) */
+  .route-line {
+    height: var(--route-stroke);
+    border-radius: var(--radius-pill);
+    background: linear-gradient(90deg, var(--route-b) 0 33%, var(--route-d) 33% 66%, var(--route-q) 66%);
+  }
 
-/* Entrada suave de tarjetas; desactivada con prefers-reduced-motion por los tokens */
-@keyframes rise { from { opacity: 0; transform: translateY(6px); } }
-.rise { animation: rise var(--duration-slow) var(--ease-out) both; }
-@media (prefers-reduced-motion: reduce) {
-  .rise { animation: none; }
-}
+  /* Entrada suave de tarjetas; desactivada con prefers-reduced-motion por los tokens */
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+  .rise {
+    animation: rise var(--duration-slow) var(--ease-out) both;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .rise {
+      animation: none;
+    }
+  }
 
-.sr-only-focusable:not(:focus):not(:focus-within) {
-  position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
-}
+  .sr-only-focusable:not(:focus):not(:focus-within) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
 
-/* Etiqueta de descuento: color de la línea Q con su texto de contraste (claro y oscuro) */
-.tag-discount {
-  display: inline-block;
-  padding: 0.15em 0.45em;
-  border-radius: var(--radius-sm);
-  background: var(--route-q);
-  color: var(--on-route-q);
-  font: var(--weight-bold) var(--text-xs) / 1.2 var(--font-body);
-  font-variant-numeric: tabular-nums;
+  /* Etiqueta de descuento: color de la línea Q con su texto de contraste (claro y oscuro) */
+  .tag-discount {
+    display: inline-block;
+    padding: 0.15em 0.45em;
+    border-radius: var(--radius-sm);
+    background: var(--route-q);
+    color: var(--on-route-q);
+    font: var(--weight-bold) var(--text-xs) / 1.2 var(--font-body);
+    font-variant-numeric: tabular-nums;
+  }
 }

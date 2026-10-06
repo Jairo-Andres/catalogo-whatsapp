@@ -17,14 +17,29 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
             <BrandMark /> Administración
           </Link>
           <nav aria-label="Administración" className="flex flex-wrap items-center gap-1">
-            <Link href="/admin" className="ja-btn ja-btn--sm text-bg underline-offset-4 hover:underline">Métricas</Link>
-            <Link href="/admin/tiendas" className="ja-btn ja-btn--sm text-bg underline-offset-4 hover:underline">Tiendas</Link>
-            <Link href="/" className="ja-btn ja-btn--sm text-bg underline-offset-4 hover:underline">Sitio</Link>
-            <form action={signOut}><button type="submit" className={buttonClass("ghost", "sm", "text-bg hover:bg-transparent hover:underline")}>Salir</button></form>
+            <Link href="/admin" className="ja-btn ja-btn--sm text-bg underline-offset-4 hover:underline">
+              Métricas
+            </Link>
+            <Link href="/admin/tiendas" className="ja-btn ja-btn--sm text-bg underline-offset-4 hover:underline">
+              Tiendas
+            </Link>
+            <Link href="/" className="ja-btn ja-btn--sm text-bg underline-offset-4 hover:underline">
+              Sitio
+            </Link>
+            <form action={signOut}>
+              <button
+                type="submit"
+                className={buttonClass("ghost", "sm", "text-bg hover:bg-transparent hover:underline")}
+              >
+                Salir
+              </button>
+            </form>
           </nav>
         </div>
       </header>
-      <main id="contenido" className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">{children}</main>
+      <main id="contenido" className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
+        {children}
+      </main>
     </>
   );
 }

@@ -24,12 +24,18 @@ export default async function AdminTiendasPage() {
               <li key={s.id} className="ja-card gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
                 <div className="grid gap-1">
                   <p className="flex flex-wrap items-center gap-2">
-                    <Link href={`/${s.slug}`} className="font-display text-lg font-black underline-offset-4 hover:underline">{s.name}</Link>
+                    <Link
+                      href={`/${s.slug}`}
+                      className="font-display text-lg font-black underline-offset-4 hover:underline"
+                    >
+                      {s.name}
+                    </Link>
                     <StatusBadge tone={st.tone}>{st.label}</StatusBadge>
                     {s.featured && <span className="ja-tag-example">Destacada</span>}
                   </p>
                   <p className="text-sm text-fg-muted">
-                    /{s.slug} · {s.city ?? "Sin ciudad"} · {Number(s.products)} productos · {Number(s.visits_30d)} visitas (30 d) · creada {formatDateTime(s.created_at)}
+                    /{s.slug} · {s.city ?? "Sin ciudad"} · {Number(s.products)} productos · {Number(s.visits_30d)}{" "}
+                    visitas (30 d) · creada {formatDateTime(s.created_at)}
                   </p>
                 </div>
                 <AdminStoreActions id={s.id} name={s.name} status={s.status} featured={s.featured} />

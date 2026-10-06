@@ -49,7 +49,11 @@ export async function track(storeId: string, type: EventType, productId?: string
       headers: {
         "Content-Type": "application/json",
         apikey: key,
-        ...(token ? { Authorization: `Bearer ${token}` } : key.startsWith("eyJ") ? { Authorization: `Bearer ${key}` } : {}),
+        ...(token
+          ? { Authorization: `Bearer ${token}` }
+          : key.startsWith("eyJ")
+            ? { Authorization: `Bearer ${key}` }
+            : {}),
       },
       body: JSON.stringify({
         p_store_id: storeId,

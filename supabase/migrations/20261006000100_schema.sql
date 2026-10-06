@@ -88,7 +88,7 @@ create table public.stores (
     check (slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$' and length(slug) between 3 and 40)
     check (slug not in ('panel', 'admin', 'login', 'registro', 'tiendas', 'terminos',
                         'privacidad', 'api', '_next', 'static', 'auth', 'salir',
-                        'sitemap', 'robots', 'favicon')),
+                        'sitemap', 'robots', 'favicon', 'marca')),
   name text not null check (length(name) between 2 and 60),
   description text check (length(description) <= 500),
   category_id uuid references public.store_categories(id),

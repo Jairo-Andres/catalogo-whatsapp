@@ -7,7 +7,8 @@ export function LegalPage({ title, updated, children }: { title: string; updated
         <h1 className="ja-display text-4xl">{title}</h1>
         <p className="text-sm text-fg-muted">Última actualización: {updated}</p>
         <p className="rounded-md border border-dashed border-border-strong p-3 text-sm">
-          Borrador para un proyecto de portafolio. Antes de usarlo con vendedores reales debe revisarlo alguien con conocimiento legal.
+          Borrador para un proyecto de portafolio. Antes de usarlo con vendedores reales debe revisarlo alguien con
+          conocimiento legal.
         </p>
         {children}
       </article>
