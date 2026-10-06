@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useRef, useState } from "react";
-import { compressToWebp, imageExtension } from "@/lib/images";
+import { compressToWebp, imageExtension, isHeic } from "@/lib/images";
 import { createClient } from "@/lib/supabase/client";
 import { BUCKET } from "@/lib/storage";
 import { Button } from "@/components/ui/button";
@@ -30,12 +30,13 @@ export function ImageUpload({ storeId, folder, name, label, defaultUrl, maxSide,
     e.target.value = "";
     if (!file) return;
     setError("");
-    if (!file.type.startsWith("image/")) {
-      setError("El archivo debe ser una imagen (JPG, PNG o WebP).");
+    // Algunas galerías mandan las HEIC sin tipo: se aceptan por la extensión.
+    if (!file.type.startsWith("image/") && !isHeic(file)) {
+      setError("El archivo debe ser una imagen (JPG, PNG, WebP o HEIC).");
       return;
     }
-    if (file.size > 25 * 1024 * 1024) {
-      setError("La imagen pesa más de 25 MB. Elige otra.");
+    if (file.size > 60 * 1024 * 1024) {
+      setError("La imagen pesa más de 60 MB. Elige otra.");
       return;
     }
     setBusy(true);
@@ -97,7 +98,7 @@ export function ImageUpload({ storeId, folder, name, label, defaultUrl, maxSide,
             ref={inputRef}
             id={id}
             type="file"
-            accept="image/*"
+            accept="image/*,.heic,.heif"
             className="sr-only"
             tabIndex={-1}
             aria-label={`${label}: elegir archivo`}

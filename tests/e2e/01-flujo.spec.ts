@@ -68,7 +68,7 @@ test("crea un producto con 3 fotos comprimidas y descuento", async ({ page }) =>
   const status = await page.getByText(/Foto lista/).textContent();
   const [after, before] = [...status!.matchAll(/(\d+) KB/g)].map((m) => Number(m[1]));
   expect(before).toBeGreaterThan(1000); // la original pesa más de 1 MB
-  expect(after).toBeLessThanOrEqual(260); // objetivo ~200 KB
+  expect(after).toBeLessThanOrEqual(400); // objetivo ~300 KB
   await files.nth(1).setInputFiles(path.resolve(__dirname, ".fixtures/foto-2.png"));
   await files.nth(2).setInputFiles(path.resolve(__dirname, ".fixtures/foto-3.png"));
   await expect(page.getByText(/Foto lista/)).toHaveCount(3, { timeout: 30_000 });
@@ -76,6 +76,7 @@ test("crea un producto con 3 fotos comprimidas y descuento", async ({ page }) =>
   await page.getByLabel("Nombre").fill("Torta de chocolate");
   await page.getByLabel("Descripción").fill("Torta húmeda para 10 porciones.");
   await page.getByLabel("Precio (COP)").fill("30000");
+  await page.locator("summary", { hasText: "Descuento" }).click(); // abre el bloque desplegable
   await page.getByLabel("Porcentaje").fill("20");
   await expect(page.getByLabel("Precio de oferta (COP)")).toHaveValue("24000");
   await page.getByLabel("Stock").fill("5");

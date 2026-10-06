@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { saveProduct } from "@/lib/actions/products";
 import type { FormState } from "@/lib/actions/store";
 import { discountPercent, formatCOP, salePriceFromPercent } from "@/lib/format";
@@ -37,8 +38,14 @@ export function ProductForm({ storeId, product }: { storeId: string; product?: P
   // Fotos: se muestra la principal y un botón para agregar más; al editar, tantos espacios como fotos haya.
   const initialImages = IMAGE_FIELDS.map((name, i) => (v ? v[name] || null : (product?.images[i] ?? null)));
   const [photoSlots, setPhotoSlots] = useState(() =>
-    Math.max(1, initialImages.reduce((last, url, i) => (url ? i + 1 : last), 0)),
+    Math.max(
+      1,
+      initialImages.reduce((last, url, i) => (url ? i + 1 : last), 0),
+    ),
   );
+
+  // El bloque de descuento empieza cerrado, salvo que el producto ya tenga uno.
+  const [hasDiscountAtStart] = useState(() => salePrice !== "");
 
   const priceNum = Number(price);
   const saleNum = salePrice === "" ? null : Number(salePrice);
@@ -132,53 +139,58 @@ export function ProductForm({ storeId, product }: { storeId: string; product?: P
         )}
       </Field>
 
-      <fieldset className="grid gap-3 rounded-lg border border-border p-4">
-        <legend className="px-1 font-bold">
-          Descuento <span className="font-normal text-fg-muted">(opcional)</span>
-        </legend>
-        <p className="text-sm text-fg-muted">Escribe el porcentaje o el precio de oferta; el otro se calcula solo.</p>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Porcentaje">
-            {({ id }) => (
-              <Input
-                id={id}
-                inputMode="numeric"
-                value={percent}
-                placeholder="20"
-                onChange={(e) => {
-                  const next = e.target.value.replace(/\D/g, "").slice(0, 2);
-                  setPercent(next);
-                  setSalePrice(next ? String(salePriceFromPercent(priceNum, Number(next)) ?? "") : "");
-                }}
-              />
-            )}
-          </Field>
-          <Field label="Precio de oferta (COP)" error={f.sale_price}>
-            {({ id, describedBy, invalid }) => (
-              <Input
-                id={id}
-                name="sale_price"
-                inputMode="numeric"
-                value={salePrice}
-                aria-describedby={describedBy}
-                aria-invalid={invalid}
-                onChange={(e) => {
-                  const next = e.target.value.replace(/\D/g, "");
-                  setSalePrice(next);
-                  const p = discountPercent(priceNum, next === "" ? null : Number(next));
-                  setPercent(p ? String(p) : "");
-                }}
-              />
-            )}
-          </Field>
+      <details open={hasDiscountAtStart} className="group rounded-lg border border-border">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-lg px-4 py-3 font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent [&::-webkit-details-marker]:hidden">
+          <span>
+            Descuento <span className="font-normal text-fg-muted">(opcional)</span>
+          </span>
+          <ChevronDown aria-hidden="true" className="size-5 shrink-0 transition-transform group-open:rotate-180" />
+        </summary>
+        <div className="grid gap-3 px-4 pb-4">
+          <p className="text-sm text-fg-muted">Escribe el porcentaje o el precio de oferta; el otro se calcula solo.</p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Porcentaje">
+              {({ id }) => (
+                <Input
+                  id={id}
+                  inputMode="numeric"
+                  value={percent}
+                  placeholder="20"
+                  onChange={(e) => {
+                    const next = e.target.value.replace(/\D/g, "").slice(0, 2);
+                    setPercent(next);
+                    setSalePrice(next ? String(salePriceFromPercent(priceNum, Number(next)) ?? "") : "");
+                  }}
+                />
+              )}
+            </Field>
+            <Field label="Precio de oferta (COP)" error={f.sale_price}>
+              {({ id, describedBy, invalid }) => (
+                <Input
+                  id={id}
+                  name="sale_price"
+                  inputMode="numeric"
+                  value={salePrice}
+                  aria-describedby={describedBy}
+                  aria-invalid={invalid}
+                  onChange={(e) => {
+                    const next = e.target.value.replace(/\D/g, "");
+                    setSalePrice(next);
+                    const p = discountPercent(priceNum, next === "" ? null : Number(next));
+                    setPercent(p ? String(p) : "");
+                  }}
+                />
+              )}
+            </Field>
+          </div>
+          {pct !== null && saleNum !== null && (
+            <p className="text-sm" aria-live="polite">
+              Se verá así: <s className="text-fg-muted">{formatCOP(priceNum)}</s> <strong>{formatCOP(saleNum)}</strong>{" "}
+              <span className="tag-discount">-{pct}%</span>
+            </p>
+          )}
         </div>
-        {pct !== null && saleNum !== null && (
-          <p className="text-sm" aria-live="polite">
-            Se verá así: <s className="text-fg-muted">{formatCOP(priceNum)}</s> <strong>{formatCOP(saleNum)}</strong>{" "}
-            <span className="tag-discount">-{pct}%</span>
-          </p>
-        )}
-      </fieldset>
+      </details>
 
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="Stock" error={f.stock} optional hint="Déjalo vacío si no llevas control de unidades.">
