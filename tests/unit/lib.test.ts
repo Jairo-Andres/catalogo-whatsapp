@@ -1,4 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { isOwnStorageUrl, publicUrl, storagePath } from "@/lib/storage";
 import { discountPercent, effectivePrice, formatCOP, salePriceFromPercent } from "@/lib/format";
 import { isValidSlug, slugify } from "@/lib/slug";
 import { buildOrderMessage, isValidWhatsapp, normalizeWhatsapp, whatsappLink } from "@/lib/whatsapp";
@@ -137,5 +139,43 @@ describe("validaciones del servidor", () => {
     expect(safeNext("//evil.test")).toBe("/panel");
     expect(safeNext("https://evil.test")).toBe("/panel");
     expect(safeNext("/\\evil.test")).toBe("/panel");
+  });
+});
+
+describe("URLs de fotos en Storage", () => {
+  const STORE = "1f0c2a8e-0000-4000-8000-000000000001";
+  const original = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  afterEach(() => {
+    process.env.NEXT_PUBLIC_SUPABASE_URL = original;
+  });
+
+  // La variable se pega a mano en Vercel: con "/" final, espacios o salto de línea
+  // la URL que arma supabase-js en el navegador debe seguir siendo aceptada.
+  it.each([
+    "https://abc.supabase.co",
+    "https://abc.supabase.co/",
+    " https://abc.supabase.co\n",
+    "https://ABC.supabase.co",
+  ])("acepta la URL que genera supabase-js con NEXT_PUBLIC_SUPABASE_URL=%j", (env) => {
+    process.env.NEXT_PUBLIC_SUPABASE_URL = env;
+    const url = createSupabaseClient(env.trim(), "k").storage.from("catalogo").getPublicUrl(`${STORE}/productos/x.webp`)
+      .data.publicUrl;
+    expect(isOwnStorageUrl(url, STORE)).toBe(true);
+    expect(storagePath(url)).toBe(`${STORE}/productos/x.webp`);
+    expect(publicUrl("a.webp").toLowerCase()).toBe("https://abc.supabase.co/storage/v1/object/public/catalogo/a.webp");
+  });
+
+  it("rechaza fotos de otra tienda, otro dominio o con rutas raras", () => {
+    process.env.NEXT_PUBLIC_SUPABASE_URL = "https://abc.supabase.co/";
+    const base = "https://abc.supabase.co/storage/v1/object/public/catalogo";
+    expect(isOwnStorageUrl(null, STORE)).toBe(true);
+    expect(isOwnStorageUrl(`${base}/otra-tienda/productos/x.webp`, STORE)).toBe(false);
+    expect(isOwnStorageUrl(`https://evil.example/storage/v1/object/public/catalogo/${STORE}/x.webp`, STORE)).toBe(
+      false,
+    );
+    expect(isOwnStorageUrl(`${base}/${STORE}/../otra/x.webp`, STORE)).toBe(false);
+    expect(isOwnStorageUrl(`${base}/${STORE}/%2e%2e/otra/x.webp`, STORE)).toBe(false);
+    expect(isOwnStorageUrl(`${base}/${STORE}/x.webp?x=1`, STORE)).toBe(false);
+    expect(isOwnStorageUrl("no es una url", STORE)).toBe(false);
   });
 });

@@ -18,6 +18,7 @@ export const LIMITS = {
   productsPerStore: 60,
   cartDistinctItems: 30,
   cartQtyPerItem: 99,
+  imagesPerProduct: 3,
   imageMaxSide: 1280,
   imageTargetKB: 200,
 } as const;

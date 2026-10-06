@@ -54,14 +54,19 @@ test("el vendedor se registra y crea su tienda en una pantalla", async ({ page }
   storeId = row.id;
 });
 
-test("crea un producto con foto comprimida y descuento", async ({ page }) => {
+test("crea un producto con 3 fotos comprimidas y descuento", async ({ page }) => {
   await login(page, seller, "/panel/productos/nuevo");
-  await page.locator('input[type="file"]').setInputFiles(path.resolve(__dirname, ".fixtures/foto-pesada.jpg"));
+  const files = page.locator('input[type="file"]');
+  await expect(files).toHaveCount(3);
+  await files.nth(0).setInputFiles(path.resolve(__dirname, ".fixtures/foto-pesada.jpg"));
   await expect(page.getByText(/Foto lista/)).toBeVisible({ timeout: 30_000 });
   const status = await page.getByText(/Foto lista/).textContent();
   const [after, before] = [...status!.matchAll(/(\d+) KB/g)].map((m) => Number(m[1]));
   expect(before).toBeGreaterThan(1000); // la original pesa más de 1 MB
   expect(after).toBeLessThanOrEqual(260); // objetivo ~200 KB
+  await files.nth(1).setInputFiles(path.resolve(__dirname, ".fixtures/foto-2.png"));
+  await files.nth(2).setInputFiles(path.resolve(__dirname, ".fixtures/foto-3.png"));
+  await expect(page.getByText(/Foto lista/)).toHaveCount(3, { timeout: 30_000 });
 
   await page.getByLabel("Nombre").fill("Torta de chocolate");
   await page.getByLabel("Descripción").fill("Torta húmeda para 10 porciones.");
@@ -73,14 +78,33 @@ test("crea un producto con foto comprimida y descuento", async ({ page }) => {
   await expect(page).toHaveURL(/\/panel\/productos\?guardado=nuevo/);
   await expect(page.getByRole("link", { name: "Editar Torta de chocolate" })).toBeVisible();
 
-  const [p] = await sql<{ id: string; sale_price: string; url: string }>(
-    `select p.id, p.sale_price, i.url from public.products p join public.product_images i on i.product_id = p.id
-     where p.store_id = $1 and p.name = 'Torta de chocolate'`,
+  const rows = await sql<{ id: string; sale_price: string; url: string; position: number }>(
+    `select p.id, p.sale_price, i.url, i.position from public.products p join public.product_images i on i.product_id = p.id
+     where p.store_id = $1 and p.name = 'Torta de chocolate' order by i.position`,
     [storeId],
   );
+  expect(rows.map((r) => r.position)).toEqual([0, 1, 2]);
+  const p = rows[0];
   expect(p.sale_price).toBe("24000");
-  expect(p.url).toContain(`/storage/v1/object/public/catalogo/${storeId}/productos/`);
+  for (const r of rows) expect(r.url).toContain(`/storage/v1/object/public/catalogo/${storeId}/productos/`);
   productId = p.id;
+
+  // Quitar la foto 2 al editar: quedan 2 fotos, en orden y sin huecos.
+  await page.goto(`/panel/productos/${productId}`);
+  await page.getByRole("button", { name: "Quitar" }).nth(1).click();
+  await page.getByRole("button", { name: "Guardar cambios" }).click();
+  await expect(page).toHaveURL(/guardado=editado/);
+  const after2 = await sql<{ url: string }>(
+    `select url from public.product_images where product_id = $1 order by position`,
+    [productId],
+  );
+  expect(after2.map((r) => r.url)).toEqual([rows[0].url, rows[2].url]);
+  // Y volver a 3 para el resto de pruebas.
+  await page.goto(`/panel/productos/${productId}`);
+  await page.locator('input[type="file"]').nth(2).setInputFiles(path.resolve(__dirname, ".fixtures/foto-2.png"));
+  await expect(page.getByText(/Foto lista/)).toHaveCount(1, { timeout: 30_000 });
+  await page.getByRole("button", { name: "Guardar cambios" }).click();
+  await expect(page).toHaveURL(/guardado=editado/);
 
   // Segundo producto agotado (sin foto).
   await page.goto("/panel/productos/nuevo");
@@ -159,6 +183,15 @@ test("el cliente ve la tienda, arma el carrito y pide por WhatsApp", async ({ br
   await expect(page.getByText("2 productos")).toBeVisible();
   await page.goto(`/${slug}/${productId}`);
   await expect(page.getByRole("heading", { level: 1, name: "Torta de chocolate" })).toBeVisible();
+
+  // Carrusel de 3 fotos: flechas, puntos y deslizar (scroll horizontal).
+  const gallery = page.getByRole("region", { name: "Fotos de Torta de chocolate" });
+  await expect(gallery.getByRole("img")).toHaveCount(3);
+  await expect(gallery.getByRole("button", { name: "Ver foto 1 de 3" })).toHaveAttribute("aria-current", "true");
+  await gallery.getByRole("button", { name: "Foto siguiente" }).click();
+  await expect(gallery.getByRole("button", { name: "Ver foto 2 de 3" })).toHaveAttribute("aria-current", "true");
+  await gallery.getByRole("list").evaluate((el) => el.scrollTo({ left: el.clientWidth * 2 }));
+  await expect(gallery.getByRole("button", { name: "Ver foto 3 de 3" })).toHaveAttribute("aria-current", "true");
 
   await expect
     .poll(async () =>

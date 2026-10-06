@@ -278,6 +278,30 @@ describe("productos", () => {
     );
     expect(err?.code).toBe("42501");
   });
+
+  it("imágenes: máximo 3 por producto (posiciones 0, 1 y 2 sin repetir)", async () => {
+    const insert = (position: number) =>
+      `insert into public.product_images (product_id, url, position) values ($1, 'https://x/${position}.webp', ${position})`;
+    const ok = await as(db, A(), async () => {
+      await db.query(`delete from public.product_images where product_id = $1`, [ids.stockProduct]);
+      let n = 0;
+      for (const pos of [0, 1, 2]) n += (await db.query(insert(pos), [ids.stockProduct])).rowCount ?? 0;
+      return n;
+    });
+    expect(ok).toBe(3);
+    const fourth = await errorAs(db, A(), insert(3), [ids.stockProduct]);
+    expect(fourth?.code).toBe("23514");
+    const repeated = await as(db, A(), async () => {
+      await db.query(insert(0), [ids.stockProduct]);
+      try {
+        await db.query(insert(0), [ids.stockProduct]);
+        return null;
+      } catch (e) {
+        return (e as { code?: string }).code;
+      }
+    });
+    expect(repeated).toBe("23505");
+  });
 });
 
 describe("eventos (track_event)", () => {

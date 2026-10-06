@@ -1,5 +1,6 @@
 import type { Database } from "@/lib/database.types";
 import { createClient } from "@/lib/supabase/client";
+import { supabaseEnv } from "@/lib/supabase/env";
 
 type EventType = Database["public"]["Enums"]["event_type"];
 const SOURCES = ["whatsapp", "instagram", "facebook", "qr", "directo"] as const;
@@ -39,8 +40,7 @@ export function getSource(): string {
  */
 export async function track(storeId: string, type: EventType, productId?: string | null): Promise<void> {
   try {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+    const { url, key } = supabaseEnv();
     const { data } = await createClient().auth.getSession();
     const token = data.session?.access_token;
     await fetch(`${url}/rest/v1/rpc/track_event`, {

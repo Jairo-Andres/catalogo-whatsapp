@@ -13,19 +13,25 @@ export type ProductRow = {
   stock: number | null;
   is_unique: boolean;
   status: "disponible" | "agotado" | "vendido";
+  /** Foto principal (la primera de images). */
   image_url: string | null;
+  /** Hasta 3 fotos, en orden. */
+  images: string[];
 };
 
-type RawProduct = Omit<ProductRow, "image_url"> & { product_images: { url: string; position: number }[] | null };
+type RawProduct = Omit<ProductRow, "image_url" | "images"> & {
+  product_images: { url: string; position: number }[] | null;
+};
 
 export function toProductRow(p: RawProduct): ProductRow {
   const { product_images, ...rest } = p;
-  const first = [...(product_images ?? [])].sort((a, b) => a.position - b.position)[0];
+  const images = [...(product_images ?? [])].sort((a, b) => a.position - b.position).map((i) => i.url);
   return {
     ...rest,
     price: Number(rest.price),
     sale_price: rest.sale_price == null ? null : Number(rest.sale_price),
-    image_url: first?.url ?? null,
+    image_url: images[0] ?? null,
+    images,
   };
 }
 

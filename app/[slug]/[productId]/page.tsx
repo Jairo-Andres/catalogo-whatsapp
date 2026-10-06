@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Share2 } from "lucide-react";
 import { AddToCart } from "@/components/store/add-to-cart";
 import { Price } from "@/components/store/price";
-import { ProductThumb } from "@/components/store/product-image";
+import { ProductGallery } from "@/components/store/product-gallery";
 import { TrackView } from "@/components/store/track-view";
 import { PRODUCT_STATUS, StatusBadge } from "@/components/ui/badge";
 import { effectivePrice, formatCOP } from "@/lib/format";
@@ -60,12 +60,7 @@ export default async function ProductPage({ params }: PageProps<"/[slug]/[produc
         <ArrowLeft aria-hidden="true" className="size-5" /> {store.name}
       </Link>
       <article className="grid gap-6 md:grid-cols-2 md:gap-10">
-        <ProductThumb
-          url={product.image_url}
-          className="aspect-square w-full rounded-lg"
-          sizes="(min-width: 768px) 50vw, 100vw"
-          priority
-        />
+        <ProductGallery images={product.images} name={product.name} className="aspect-square w-full rounded-lg" />
         <div className="grid content-start gap-4">
           <h1 className="ja-display text-3xl sm:text-4xl">{product.name}</h1>
           <Price price={product.price} salePrice={product.sale_price} size="lg" />

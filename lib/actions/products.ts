@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient, getSession } from "@/lib/supabase/server";
 import { LIMITS } from "@/lib/site";
-import { BUCKET, isOwnStorageUrl, publicUrl } from "@/lib/storage";
+import { BUCKET, isOwnStorageUrl, storagePath } from "@/lib/storage";
 import { fieldErrors, productSchema } from "@/lib/validators";
 import type { FormState } from "./store";
 
@@ -26,8 +26,15 @@ export async function saveProduct(_prev: FormState, formData: FormData): Promise
   const productId = raw.id || null;
   const parsed = productSchema.safeParse(raw);
   if (!parsed.success) return { fields: fieldErrors(parsed.error), values: raw };
-  const { image_url, ...data } = parsed.data;
-  if (!isOwnStorageUrl(image_url, store.id)) return { error: "La foto no es válida. Súbela de nuevo.", values: raw };
+  const { image_url, image_url_2, image_url_3, ...data } = parsed.data;
+  // Hasta 3 fotos en orden, sin huecos ni repetidas.
+  const images = [...new Set([image_url, image_url_2, image_url_3].filter((u): u is string => !!u))].slice(
+    0,
+    LIMITS.imagesPerProduct,
+  );
+  if (!images.every((u) => isOwnStorageUrl(u, store.id))) {
+    return { error: "Una de las fotos no es válida. Súbela de nuevo.", values: raw };
+  }
   if (data.is_unique && data.stock !== null && data.stock > 1) {
     return { fields: { stock: "Un producto único tiene stock 1 o vacío" }, values: raw };
   }
@@ -58,17 +65,24 @@ export async function saveProduct(_prev: FormState, formData: FormData): Promise
     id = created.id;
   }
 
-  // Foto: MVP con una imagen (position 0).
-  const { data: oldImages } = await supabase.from("product_images").select("id, url").eq("product_id", id);
-  const old = oldImages?.[0];
-  if (old?.url !== image_url) {
-    if (old) {
-      await supabase.from("product_images").delete().eq("product_id", id);
-      if (isOwnStorageUrl(old.url, store.id)) {
-        await supabase.storage.from(BUCKET).remove([old.url.slice(publicUrl("").length)]);
-      }
+  // Fotos: se reemplaza la lista solo si cambió (orden incluido); la posición 0 es la principal.
+  const { data: oldRows } = await supabase
+    .from("product_images")
+    .select("url, position")
+    .eq("product_id", id)
+    .order("position");
+  const oldImages = (oldRows ?? []).map((r) => r.url);
+  if (oldImages.join("\n") !== images.join("\n")) {
+    if (oldImages.length) await supabase.from("product_images").delete().eq("product_id", id);
+    if (images.length) {
+      const { error } = await supabase
+        .from("product_images")
+        .insert(images.map((url, position) => ({ product_id: id, url, position })));
+      if (error) return { error: "El producto se guardó, pero no pudimos guardar las fotos.", values: raw };
     }
-    if (image_url) await supabase.from("product_images").insert({ product_id: id, url: image_url, position: 0 });
+    // Borrar del Storage las fotos que ya no se usan, para no gastar espacio.
+    const stale = oldImages.filter((u) => !images.includes(u) && isOwnStorageUrl(u, store.id));
+    if (stale.length) await supabase.storage.from(BUCKET).remove(stale.map((u) => storagePath(u)!));
   }
 
   revalidateStore(store.slug);
@@ -114,7 +128,7 @@ export async function deleteProduct(formData: FormData) {
   const { data: images } = await supabase.from("product_images").select("url").eq("product_id", id);
   const { error } = await supabase.from("products").delete().eq("id", id).eq("store_id", store.id);
   if (!error && images?.length) {
-    const paths = images.filter((i) => isOwnStorageUrl(i.url, store.id)).map((i) => i.url.slice(publicUrl("").length));
+    const paths = images.filter((i) => isOwnStorageUrl(i.url, store.id)).map((i) => storagePath(i.url)!);
     if (paths.length) await supabase.storage.from(BUCKET).remove(paths);
   }
   revalidateStore(store.slug);

@@ -81,6 +81,8 @@ export const productSchema = z
       .transform((v) => v === "on"),
     status: z.enum(["disponible", "agotado", "vendido"]).default("disponible"),
     image_url: optionalText(500),
+    image_url_2: optionalText(500),
+    image_url_3: optionalText(500),
   })
   .refine((p) => p.sale_price === null || p.sale_price < p.price, {
     path: ["sale_price"],

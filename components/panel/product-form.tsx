@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { saveProduct } from "@/lib/actions/products";
 import type { FormState } from "@/lib/actions/store";
 import { discountPercent, formatCOP, salePriceFromPercent } from "@/lib/format";
+import { LIMITS } from "@/lib/site";
 import { Button } from "@/components/ui/button";
 import { Field, FormMessage, Input, Select, Textarea } from "@/components/ui/field";
 import { ImageUpload } from "./image-upload";
@@ -17,8 +18,10 @@ export type ProductInput = {
   stock: number | null;
   is_unique: boolean;
   status: "disponible" | "agotado" | "vendido";
-  image_url: string | null;
+  images: string[];
 };
+
+const IMAGE_FIELDS = ["image_url", "image_url_2", "image_url_3"] as const;
 
 export function ProductForm({ storeId, product }: { storeId: string; product?: ProductInput }) {
   const [state, action, pending] = useActionState<FormState, FormData>(saveProduct, {});
@@ -41,13 +44,26 @@ export function ProductForm({ storeId, product }: { storeId: string; product?: P
       <FormMessage error={state.error} />
       {product && <input type="hidden" name="id" value={product.id} />}
 
-      <ImageUpload
-        storeId={storeId}
-        folder="productos"
-        name="image_url"
-        label="Foto"
-        defaultUrl={v?.image_url ?? product?.image_url}
-      />
+      <div className="grid gap-2">
+        <h2 className="font-bold">
+          Fotos <span className="font-normal text-fg-muted">(hasta {LIMITS.imagesPerProduct})</span>
+        </h2>
+        <p className="text-sm text-fg-muted">
+          La principal sale en el catálogo; en la página del producto el cliente desliza para ver las demás.
+        </p>
+        <div className="grid gap-4 rounded-lg border border-border p-4">
+          {IMAGE_FIELDS.map((name, i) => (
+            <ImageUpload
+              key={name}
+              storeId={storeId}
+              folder="productos"
+              name={name}
+              label={i === 0 ? "Foto principal" : `Foto ${i + 1}`}
+              defaultUrl={v ? v[name] || null : (product?.images[i] ?? null)}
+            />
+          ))}
+        </div>
+      </div>
 
       <Field label="Nombre" error={f.name}>
         {({ id, describedBy, invalid }) => (

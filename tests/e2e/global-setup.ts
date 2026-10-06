@@ -12,4 +12,13 @@ export default async function globalSetup() {
   await sharp(raw, { raw: { width: size, height: size, channels: 3 } })
     .jpeg({ quality: 95 })
     .toFile(path.join(dir, "foto-pesada.jpg"));
+  // Dos fotos livianas más para probar el carrusel de 3 fotos.
+  for (const [name, color] of [
+    ["foto-2.png", "#C2185B"],
+    ["foto-3.png", "#F2B705"],
+  ]) {
+    await sharp({ create: { width: 800, height: 800, channels: 3, background: color } })
+      .png()
+      .toFile(path.join(dir, name));
+  }
 }

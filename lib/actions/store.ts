@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient, getSession } from "@/lib/supabase/server";
-import { BUCKET, isOwnStorageUrl, publicUrl } from "@/lib/storage";
+import { BUCKET, isOwnStorageUrl, storagePath } from "@/lib/storage";
 import { fieldErrors, storeSchema, type FieldErrors } from "@/lib/validators";
 
 export type FormState = { error?: string; success?: string; fields?: FieldErrors; values?: Record<string, string> };
@@ -42,7 +42,7 @@ export async function saveStore(_prev: FormState, formData: FormData): Promise<F
     const stale = [current.logo_url, current.banner_url].filter(
       (u): u is string => !!u && u !== data.logo_url && u !== data.banner_url && isOwnStorageUrl(u, current.id),
     );
-    if (stale.length) await supabase.storage.from(BUCKET).remove(stale.map((u) => u.slice(publicUrl("").length)));
+    if (stale.length) await supabase.storage.from(BUCKET).remove(stale.map((u) => storagePath(u)!));
   }
 
   revalidatePath("/", "layout");
