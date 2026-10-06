@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MapPin, MessageCircle } from "lucide-react";
 import { Shape } from "@/components/decor";
+import { storeFont } from "@/lib/store-fonts";
 import { ProductCard } from "@/components/store/product-card";
 import { TrackView } from "@/components/store/track-view";
 import { getPublicProducts, getStoreBySlug } from "@/lib/public-store";
@@ -33,6 +34,7 @@ export default async function StorePage({ params }: PageProps<"/[slug]">) {
   const store = await getStoreBySlug((await params).slug);
   if (!store) notFound();
   const products = await getPublicProducts(store.id);
+  const look = storeFont(store.font);
   const initials = store.name
     .split(/\s+/)
     .slice(0, 2)
@@ -94,7 +96,7 @@ export default async function StorePage({ params }: PageProps<"/[slug]">) {
                 )}
               </div>
               <div className="grid min-w-0 gap-3">
-                <h1 id="tienda-titulo" className="ja-display break-words text-4xl sm:text-6xl">
+                <h1 id="tienda-titulo" className="ja-display break-words text-4xl sm:text-6xl" style={look.title}>
                   {store.name}
                 </h1>
                 {(store.category || store.city) && (
@@ -110,7 +112,11 @@ export default async function StorePage({ params }: PageProps<"/[slug]">) {
                 )}
               </div>
             </div>
-            {store.description && <p className="mt-muted max-w-2xl text-lg">{store.description}</p>}
+            {store.description && (
+              <p className="mt-muted max-w-2xl whitespace-pre-line text-lg" style={look.body}>
+                {store.description}
+              </p>
+            )}
             <a
               href={whatsappLink(store.whatsapp, `Hola ${store.name}, vi tu catálogo y tengo una pregunta.`)}
               target="_blank"

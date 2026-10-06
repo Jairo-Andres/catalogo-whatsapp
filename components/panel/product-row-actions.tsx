@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useId, useRef, useState } from "react";
 import { markSold, setProductStatus, type SoldState } from "@/lib/actions/products";
+import { Check, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/field";
 
@@ -44,12 +45,15 @@ export function MarkSold({
   stock,
   isUnique,
   disabled,
+  sold = false,
 }: {
   id: string;
   name: string;
   stock: number | null;
   isUnique: boolean;
   disabled: boolean;
+  /** El producto ya está vendido (estado "vendido"): el botón queda marcado. */
+  sold?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [state, action, pending] = useActionState<SoldState, FormData>(async (prev, fd) => {
@@ -70,9 +74,33 @@ export function MarkSold({
 
   return (
     <>
-      <Button variant="secondary" size="sm" disabled={disabled} onClick={() => setOpen(true)}>
-        Marcar vendido
-      </Button>
+      {sold ? (
+        // Marcado: verde sólido + check + aria-pressed (no depende solo del color).
+        <Button
+          size="sm"
+          variant="wa"
+          aria-pressed="true"
+          aria-disabled="true"
+          className="pointer-events-none"
+          tabIndex={-1}
+        >
+          <Check aria-hidden="true" className="size-4" /> Vendido
+          <span className="sr-only">: {name}</span>
+        </Button>
+      ) : (
+        <Button
+          variant={open ? "primary" : "secondary"}
+          size="sm"
+          disabled={disabled}
+          aria-pressed={open}
+          aria-haspopup="dialog"
+          onClick={() => setOpen(true)}
+        >
+          {open ? <Check aria-hidden="true" className="size-4" /> : <Tag aria-hidden="true" className="size-4" />}
+          {disabled ? "Sin stock" : "Marcar vendido"}
+          <span className="sr-only">: {name}</span>
+        </Button>
+      )}
       {state.success && !open && (
         <span role="status" className="text-sm font-bold text-status-good">
           {state.success}

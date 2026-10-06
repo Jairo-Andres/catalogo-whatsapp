@@ -1,3 +1,4 @@
+import { ExportSalesButton } from "@/components/panel/export-sales";
 import { requireStore } from "@/lib/auth";
 import { formatCOP, formatDateTime } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
@@ -17,9 +18,21 @@ export default async function VentasPage() {
   const total = rows.reduce((n, r) => n + r.quantity * Number(r.unit_price), 0);
   return (
     <div className="grid gap-6">
-      <div>
-        <h1 className="ja-display text-3xl">Ventas</h1>
-        <p className="text-fg-muted">Cada venta guarda el nombre y el precio que tenía el producto al venderse.</p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="ja-display text-3xl">Ventas</h1>
+          <p className="text-fg-muted">Cada venta guarda el nombre y el precio que tenía el producto al venderse.</p>
+        </div>
+        <ExportSalesButton
+          slug={store.slug}
+          storeName={store.name}
+          rows={rows.map((r) => ({
+            created_at: r.created_at,
+            product_name: r.product_name,
+            quantity: r.quantity,
+            unit_price: Number(r.unit_price),
+          }))}
+        />
       </div>
       {rows.length === 0 ? (
         <p className="ja-card text-fg-muted">Aún no has registrado ventas. Usa “Marcar vendido” en tus productos.</p>

@@ -84,7 +84,8 @@ export default async function ProductosPage({ searchParams }: PageProps<"/panel/
                     name={p.name}
                     stock={p.stock}
                     isUnique={p.is_unique}
-                    disabled={p.status === "vendido" || (p.stock !== null && p.stock === 0)}
+                    sold={p.status === "vendido"}
+                    disabled={p.stock !== null && p.stock === 0}
                   />
                   <Link href={`/panel/productos/${p.id}`} className={buttonClass("ghost", "sm")}>
                     <Pencil aria-hidden="true" className="size-4" /> Editar<span className="sr-only"> {p.name}</span>

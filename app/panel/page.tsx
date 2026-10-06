@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { VisitsChart } from "@/components/panel/charts";
+import { HBars, VisitsChart } from "@/components/panel/charts";
 import { StatCard } from "@/components/panel/stat-card";
 import { TopProducts } from "@/components/panel/top-products";
 import { requireStore } from "@/lib/auth";
@@ -7,6 +7,8 @@ import { formatCOP, formatDay } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "Resumen" };
+
+const monthFmt = new Intl.DateTimeFormat("es-CO", { month: "short", year: "2-digit", timeZone: "UTC" });
 
 type Summary = Record<
   | "visitas_hoy"
@@ -23,11 +25,22 @@ export default async function PanelPage({ searchParams }: PageProps<"/panel">) {
   const { store } = await requireStore("/panel");
   const days = (await searchParams).dias === "7" ? 7 : 30;
   const supabase = await createClient();
-  const [{ data: summary }, { data: byDay }, { data: topRaw }] = await Promise.all([
+  const [{ data: summary }, { data: byDay }, { data: topRaw }, { data: months }] = await Promise.all([
     supabase.rpc("store_summary", { p_store_id: store.id }),
     supabase.rpc("stats_by_day", { p_store_id: store.id, p_days: days }),
     supabase.rpc("stats_top_products", { p_store_id: store.id, p_days: 30 }),
+    supabase.rpc("stats_sales_by_month", { p_store_id: store.id, p_months: 6 }),
   ]);
+  const short = (t: string) => ([...t].length > 16 ? `${[...t].slice(0, 15).join("")}…` : t);
+  const topOrders = [...(topRaw ?? [])]
+    .filter((t) => Number(t.in_orders) > 0)
+    .sort((a, b) => Number(b.in_orders) - Number(a.in_orders))
+    .slice(0, 5)
+    .map((t) => ({ label: short(t.name), value: Number(t.in_orders) }));
+  const sales = (months ?? []).map((m) => ({
+    label: monthFmt.format(new Date(`${m.month}T00:00:00Z`)),
+    value: Number(m.revenue),
+  }));
   const top = (topRaw ?? []).map((t) => ({
     product_id: t.product_id,
     name: t.name,
@@ -48,7 +61,8 @@ export default async function PanelPage({ searchParams }: PageProps<"/panel">) {
       <div>
         <h1 className="ja-display text-3xl">Resumen</h1>
         <p className="text-fg-muted">
-          Visitas y clics de los últimos días. Las ventas cuentan cuando las marcas como vendidas.
+          Visitas, ventas y productos de los últimos días. Las ventas cuentan cuando las marcas como vendidas; los clics
+          en Pedir muestran intención de compra.
         </p>
       </div>
       <section aria-label="Cifras principales" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -85,6 +99,24 @@ export default async function PanelPage({ searchParams }: PageProps<"/panel">) {
         </div>
         <VisitsChart data={chart} title={`Visitantes y clics en Pedir, últimos ${days} días`} />
       </section>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <section aria-label="Ventas por mes" className="ja-card ja-card--raised">
+          {sales.length === 0 ? (
+            <p className="text-fg-muted">Ventas por mes: aún no hay ventas marcadas en los últimos 6 meses.</p>
+          ) : (
+            <HBars data={sales} title="Ventas por mes (marcadas como vendidas)" money />
+          )}
+        </section>
+        <section aria-label="Más incluidos en pedidos" className="ja-card ja-card--raised">
+          {topOrders.length === 0 ? (
+            <p className="text-fg-muted">
+              Más incluidos en pedidos: cuando tus clientes pidan por WhatsApp verás aquí sus favoritos.
+            </p>
+          ) : (
+            <HBars data={topOrders} title="Más incluidos en pedidos (30 días)" />
+          )}
+        </section>
+      </div>
       <TopProducts items={top} days={30} />
       {n("unidades_vendidas_30d") === 0 && (
         <p className="ja-card">

@@ -17,6 +17,7 @@ export type PublicStore = {
   offers_delivery: boolean;
   offers_pickup: boolean;
   category: string | null;
+  font: string;
 };
 
 /**
@@ -29,7 +30,7 @@ export const getStoreBySlug = cache(async (slug: string): Promise<PublicStore | 
   const { data } = await supabase
     .from("stores")
     .select(
-      "id, slug, name, description, city, whatsapp, logo_url, banner_url, status, offers_delivery, offers_pickup, store_categories(name)",
+      "id, slug, name, description, city, whatsapp, logo_url, banner_url, font, status, offers_delivery, offers_pickup, store_categories(name)",
     )
     .eq("slug", slug)
     .maybeSingle();
@@ -55,7 +56,7 @@ export async function getActiveStores(opts: { category?: string; q?: string; lim
   let query = supabase
     .from("stores")
     .select(
-      `slug, name, city, logo_url, banner_url, featured, store_categories${opts.category ? "!inner" : ""}(name, slug)`,
+      `slug, name, city, logo_url, banner_url, font, featured, store_categories${opts.category ? "!inner" : ""}(name, slug)`,
     )
     .eq("status", "activa")
     .order("featured", { ascending: false })

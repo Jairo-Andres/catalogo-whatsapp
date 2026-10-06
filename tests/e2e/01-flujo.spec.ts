@@ -398,3 +398,50 @@ test("cerrar sesión está en Cuenta (no en la barra) y pide confirmación", asy
   await page.goto("/panel");
   await expect(page).toHaveURL(/\/login/);
 });
+
+test("resumen reúne las estadísticas; /panel/estadisticas lleva a Resumen", async ({ page }) => {
+  await login(page, seller, "/panel/estadisticas");
+  await expect(page).toHaveURL(/\/panel$/);
+  await expect(page.getByRole("navigation", { name: "Panel" }).getByRole("link", { name: "Estadísticas" })).toHaveCount(
+    0,
+  );
+  await expect(page.getByRole("region", { name: "Cifras principales" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Ventas por mes" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Más incluidos en pedidos" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Productos más vistos (30 días)" })).toBeVisible();
+});
+
+test("ventas: exportar a Excel descarga un .xlsx con las filas y el total", async ({ page }) => {
+  await login(page, seller, "/panel/ventas");
+  const rows = await page.locator("tbody tr").count();
+  expect(rows).toBeGreaterThan(0);
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Exportar a Excel" }).click();
+  const file = await download;
+  expect(file.suggestedFilename()).toMatch(new RegExp(`^ventas-${slug}-\d{4}-\d{2}-\d{2}\.xlsx$`));
+  const ExcelJS = (await import("exceljs")).default;
+  const wb = new ExcelJS.Workbook();
+  await wb.xlsx.readFile(await file.path());
+  const ws = wb.getWorksheet("Ventas")!;
+  expect(ws.getCell("A1").value).toBe("Fecha");
+  expect(ws.rowCount).toBe(rows + 2); // encabezado + filas + total
+  expect(ws.getCell(`B${rows + 2}`).value).toBe("Total");
+});
+
+test("tienda: elegir tipo de letra y usar emojis; la tienda pública los muestra", async ({ page }) => {
+  await login(page, seller, "/panel/tienda");
+  await page.getByRole("radio", { name: /Manuscrita/ }).check();
+  await expect(page.getByText("Vista previa")).toBeVisible();
+  await page.getByLabel("Descripción corta").fill("Postres hechos en casa 🍰✨");
+  await page.getByRole("button", { name: "Guardar cambios" }).click();
+  await expect(page.getByText("Cambios guardados.")).toBeVisible();
+  const [row] = await sql<{ font: string; description: string }>(
+    "select font, description from public.stores where slug = $1",
+    [slug],
+  );
+  expect(row).toEqual({ font: "manuscrita", description: "Postres hechos en casa 🍰✨" });
+  await page.goto(`/${slug}`);
+  const title = page.getByRole("heading", { level: 1, name: storeName });
+  expect(await title.evaluate((el) => getComputedStyle(el).fontFamily)).toMatch(/Pacifico/);
+  await expect(page.getByText("Postres hechos en casa 🍰✨")).toBeVisible();
+});

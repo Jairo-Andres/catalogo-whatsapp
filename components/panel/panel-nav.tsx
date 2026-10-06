@@ -2,14 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Home, Package, Receipt, Store, UserRound } from "lucide-react";
+import { Home, Package, Receipt, Store, UserRound } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 const ITEMS = [
   { href: "/panel", label: "Resumen", icon: Home },
   { href: "/panel/productos", label: "Productos", icon: Package },
   { href: "/panel/ventas", label: "Ventas", icon: Receipt },
-  { href: "/panel/estadisticas", label: "Estadísticas", short: "Datos", icon: BarChart3 },
   { href: "/panel/tienda", label: "Tienda", icon: Store },
   { href: "/panel/cuenta", label: "Cuenta", icon: UserRound },
 ] as const;
@@ -23,7 +22,7 @@ export function PanelNav() {
       aria-label="Panel"
       className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-bg md:static md:border-0 md:bg-transparent"
     >
-      <ul className="mx-auto grid max-w-xl grid-cols-6 md:max-w-none md:grid-cols-1 md:gap-1">
+      <ul className="mx-auto grid max-w-xl grid-cols-5 md:max-w-none md:grid-cols-1 md:gap-1">
         {ITEMS.map((item) => {
           const { href, label, icon: Icon } = item;
           const on = active(href);
@@ -43,16 +42,7 @@ export function PanelNav() {
                 )}
               >
                 <Icon aria-hidden="true" className="size-5" />
-                {"short" in item ? (
-                  <>
-                    <span className="md:hidden" aria-hidden="true">
-                      {item.short}
-                    </span>
-                    <span className="sr-only md:not-sr-only">{label}</span>
-                  </>
-                ) : (
-                  <span>{label}</span>
-                )}
+                <span>{label}</span>
               </Link>
             </li>
           );

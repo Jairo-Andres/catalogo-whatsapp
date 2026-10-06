@@ -189,13 +189,13 @@ isOneToOne: false
                   ]
                 },"stores": {
                   Row: {
-                    "address": string | null,"banner_url": string | null,"category_id": string | null,"city": string | null,"created_at": string,"description": string | null,"featured": boolean,"id": string,"logo_url": string | null,"name": string,"offers_delivery": boolean,"offers_pickup": boolean,"owner_id": string,"payment_methods": (string)[],"schedule": Json | null,"slug": string,"status": Database["public"]['Enums']["store_status"],"updated_at": string,"whatsapp": string
+                    "address": string | null,"banner_url": string | null,"category_id": string | null,"city": string | null,"created_at": string,"description": string | null,"featured": boolean,"font": string,"id": string,"logo_url": string | null,"name": string,"offers_delivery": boolean,"offers_pickup": boolean,"owner_id": string,"payment_methods": (string)[],"schedule": Json | null,"slug": string,"status": Database["public"]['Enums']["store_status"],"updated_at": string,"whatsapp": string
                   }
                   Insert: {
-                    "address"?: string | null,"banner_url"?: string | null,"category_id"?: string | null,"city"?: string | null,"created_at"?: string,"description"?: string | null,"featured"?: boolean,"id"?: string,"logo_url"?: string | null,"name": string,"offers_delivery"?: boolean,"offers_pickup"?: boolean,"owner_id": string,"payment_methods"?: (string)[],"schedule"?: Json | null,"slug": string,"status"?: Database["public"]['Enums']["store_status"],"updated_at"?: string,"whatsapp": string
+                    "address"?: string | null,"banner_url"?: string | null,"category_id"?: string | null,"city"?: string | null,"created_at"?: string,"description"?: string | null,"featured"?: boolean,"font"?: string,"id"?: string,"logo_url"?: string | null,"name": string,"offers_delivery"?: boolean,"offers_pickup"?: boolean,"owner_id": string,"payment_methods"?: (string)[],"schedule"?: Json | null,"slug": string,"status"?: Database["public"]['Enums']["store_status"],"updated_at"?: string,"whatsapp": string
                   }
                   Update: {
-                    "address"?: string | null,"banner_url"?: string | null,"category_id"?: string | null,"city"?: string | null,"created_at"?: string,"description"?: string | null,"featured"?: boolean,"id"?: string,"logo_url"?: string | null,"name"?: string,"offers_delivery"?: boolean,"offers_pickup"?: boolean,"owner_id"?: string,"payment_methods"?: (string)[],"schedule"?: Json | null,"slug"?: string,"status"?: Database["public"]['Enums']["store_status"],"updated_at"?: string,"whatsapp"?: string
+                    "address"?: string | null,"banner_url"?: string | null,"category_id"?: string | null,"city"?: string | null,"created_at"?: string,"description"?: string | null,"featured"?: boolean,"font"?: string,"id"?: string,"logo_url"?: string | null,"name"?: string,"offers_delivery"?: boolean,"offers_pickup"?: boolean,"owner_id"?: string,"payment_methods"?: (string)[],"schedule"?: Json | null,"slug"?: string,"status"?: Database["public"]['Enums']["store_status"],"updated_at"?: string,"whatsapp"?: string
                   }
                   Relationships: [
                     {

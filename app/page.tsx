@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Check, Link2, MessageCircleHeart, ShoppingBag, Store } from "lucide-react";
 import { Shape } from "@/components/decor";
+import { CakeIllustration, CupcakesIllustration } from "@/components/illustrations";
 import { PageShell } from "@/components/page-shell";
 import { StoreCard } from "@/components/store/store-card";
 import { ButtonLink, buttonClass } from "@/components/ui/button";
@@ -45,12 +46,16 @@ function HeroPreview() {
             <div className="h-16 rounded-xl bg-[conic-gradient(from_200deg_at_70%_100%,#f58a2b,#e2407f,#f7f1e8_60%)]" />
             <p className="font-display text-sm font-black leading-tight">Repostería Demo</p>
             <p className="-mt-2 font-mono text-[0.6rem] text-[#5c636b]">Repostería · Bogotá</p>
-            {[
-              ["Torta", "$ 48.000", "bg-[#f9d6e2]"],
-              ["Cupcakes x 6", "$ 36.000", "bg-[#d6e3fb]"],
-            ].map(([n, p, bg]) => (
+            {(
+              [
+                ["Torta", "$ 48.000", "bg-[#f9d6e2]", CakeIllustration],
+                ["Cupcakes x 6", "$ 36.000", "bg-[#d6e3fb]", CupcakesIllustration],
+              ] as const
+            ).map(([n, p, bg, Art]) => (
               <div key={n} className="grid gap-1 rounded-xl bg-[#fff] p-1.5 shadow-sm">
-                <div className={`h-10 rounded-lg ${bg}`} />
+                <div className={`grid h-16 place-items-center rounded-lg ${bg}`}>
+                  <Art className="h-14 w-auto" />
+                </div>
                 <p className="text-[0.65rem] font-bold leading-none">{n}</p>
                 <p className="font-mono text-[0.6rem] leading-none">{p}</p>
                 <div className="h-2.5 rounded-full bg-[#1959d1]" />
@@ -61,10 +66,17 @@ function HeroPreview() {
       </div>
       <div className="absolute left-0 top-10 hidden rotate-[-4deg] rounded-2xl sm:block bg-[#fff] p-3 pr-4 text-[#1a1d21] shadow-lg">
         <span className="ja-tag-example mt-example">Ejemplo</span>
-        <p className="text-xs font-bold">Torta de chocolate</p>
-        <p className="flex items-center gap-1.5 font-mono text-sm font-bold">
-          $ 48.000 <span className="tag-discount rounded-full">-20%</span>
-        </p>
+        <div className="flex items-center gap-3">
+          <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-[#f9d6e2]">
+            <CakeIllustration className="h-10 w-auto" />
+          </span>
+          <div>
+            <p className="text-xs font-bold">Torta de chocolate</p>
+            <p className="flex items-center gap-1.5 font-mono text-sm font-bold">
+              $ 48.000 <span className="tag-discount rounded-full">-20%</span>
+            </p>
+          </div>
+        </div>
       </div>
       <div className="absolute right-0 top-[45%] w-48 rotate-[3deg] rounded-2xl bg-[var(--mt-mint)] p-3 text-[var(--mt-on-mint)] shadow-lg">
         <span className="ja-tag-example mt-example">Ejemplo</span>

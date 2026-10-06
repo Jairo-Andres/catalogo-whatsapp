@@ -5,6 +5,8 @@ import { MessageCircle } from "lucide-react";
 import { saveStore, type FormState } from "@/lib/actions/store";
 import type { Database } from "@/lib/database.types";
 import { slugify } from "@/lib/slug";
+import { STORE_FONT_KEYS, type StoreFont } from "@/lib/store-font-keys";
+import { STORE_FONTS, storeFont } from "@/lib/store-fonts";
 import { normalizeWhatsapp, whatsappLink } from "@/lib/whatsapp";
 import { Button } from "@/components/ui/button";
 import { Field, FormMessage, Input, Select, Textarea } from "@/components/ui/field";
@@ -31,18 +33,24 @@ export function StoreForm({
   const [whatsapp, setWhatsapp] = useState(v?.whatsapp ?? (store ? `+${store.whatsapp}` : "+57 "));
   const host = siteUrl.replace(/^https?:\/\//, "");
   const waDigits = normalizeWhatsapp(whatsapp);
+  const [description, setDescription] = useState(v?.description ?? store?.description ?? "");
+  const [font, setFont] = useState<StoreFont>(
+    ((v?.font ?? store?.font ?? "atkinson") as StoreFont) in STORE_FONTS
+      ? ((v?.font ?? store?.font ?? "atkinson") as StoreFont)
+      : "atkinson",
+  );
+  const look = storeFont(font);
 
   return (
     <form action={action} className="grid gap-5" noValidate>
       <FormMessage error={state.error} success={state.success} />
 
-      <Field label="Nombre de la tienda" error={f.name} hint="Es el título que verán tus clientes.">
+      <Field label="Nombre de la tienda" error={f.name} hint="Es el título que verán tus clientes. Puedes usar emojis.">
         {({ id, describedBy, invalid }) => (
           <Input
             id={id}
             name="name"
             required
-            maxLength={60}
             value={name}
             aria-describedby={describedBy}
             aria-invalid={invalid}
@@ -154,19 +162,63 @@ export function StoreForm({
         </Field>
       </div>
 
-      <Field label="Descripción corta" error={f.description} optional hint="Máximo 500 caracteres.">
+      <Field
+        label="Descripción corta"
+        error={f.description}
+        optional
+        hint={`${[...description].length} de 500 caracteres. Puedes usar emojis.`}
+      >
         {({ id, describedBy, invalid }) => (
           <Textarea
             id={id}
             name="description"
-            maxLength={500}
             rows={3}
-            defaultValue={v?.description ?? store?.description ?? ""}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
             aria-describedby={describedBy}
             aria-invalid={invalid}
           />
         )}
       </Field>
+
+      <fieldset className="grid gap-3">
+        <legend className="mb-1.5 font-bold">
+          Tipo de letra <span className="font-normal text-fg-muted">(nombre y descripción)</span>
+        </legend>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {STORE_FONT_KEYS.map((key) => (
+            <label
+              key={key}
+              className="flex min-h-16 cursor-pointer flex-col justify-center gap-0.5 rounded-xl border-2 border-border px-3 py-2 has-[:checked]:border-accent has-[:checked]:bg-surface has-[:focus-visible]:outline has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-[var(--color-focus)]"
+            >
+              <span className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="font"
+                  value={key}
+                  checked={font === key}
+                  onChange={() => setFont(key)}
+                  className="size-4 shrink-0 accent-[var(--color-accent)]"
+                />
+                <span className="text-sm font-bold">{STORE_FONTS[key].label}</span>
+              </span>
+              <span className="truncate text-lg" style={STORE_FONTS[key].title} aria-hidden="true">
+                {name || "Mi tienda"}
+              </span>
+            </label>
+          ))}
+        </div>
+        {f.font && <p className="text-sm font-bold text-status-bad">{f.font}</p>}
+        <div className="mt-hero grid gap-2 p-5" aria-live="polite">
+          <p className="ja-label">Vista previa</p>
+          <p className="break-words text-3xl leading-tight" style={{ fontWeight: 900, ...look.title }}>
+            {name || "Nombre de tu tienda"}
+          </p>
+          <p className="mt-muted whitespace-pre-line break-words" style={look.body}>
+            {description || "Aquí va la descripción corta de tu tienda."}
+          </p>
+        </div>
+      </fieldset>
 
       <fieldset className="grid gap-2">
         <legend className="mb-1.5 font-bold">Entrega</legend>

@@ -186,6 +186,18 @@ describe("tiendas", () => {
     expect(wa?.code).toBe("23514");
   });
 
+  it("tipo de letra: acepta las de la lista y rechaza cualquier otra", async () => {
+    const ok = await as(
+      db,
+      A(),
+      async () => (await db.query(`update public.stores set font = 'manuscrita' where id = $1`, [ids.storeA])).rowCount,
+    );
+    expect(ok).toBe(1);
+    const bad = await errorAs(db, A(), `update public.stores set font = 'comic-sans' where id = $1`, [ids.storeA]);
+    expect(bad?.code).toBe("23514");
+    await as(db, A(), () => db.query(`update public.stores set font = 'atkinson' where id = $1`, [ids.storeA]));
+  });
+
   it("solo el admin elimina tiendas", async () => {
     const n = await as(
       db,

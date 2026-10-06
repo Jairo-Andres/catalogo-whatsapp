@@ -1,15 +1,28 @@
 import { z } from "zod";
 import { isValidSlug } from "./slug";
+import { STORE_FONT_KEYS } from "./store-font-keys";
 import { isValidWhatsapp, normalizeWhatsapp } from "./whatsapp";
 
-const trimmed = (max: number) => z.string().trim().max(max, `Máximo ${max} caracteres`);
+/**
+ * Largo en caracteres como lo cuenta Postgres (length() = puntos de código), no en unidades
+ * UTF-16 como .length: así un emoji cuenta 1 (o pocos) y el límite coincide con la base.
+ */
+export const charCount = (v: string) => [...v].length;
+
+const trimmed = (max: number) =>
+  z
+    .string()
+    .trim()
+    .refine((v) => charCount(v) <= max, `Máximo ${max} caracteres`);
+/** Texto obligatorio con mínimo y máximo en caracteres. */
+const required = (min: number, max: number, minMsg: string) => trimmed(max).refine((v) => charCount(v) >= min, minMsg);
 const optionalText = (max: number) =>
   trimmed(max)
     .optional()
     .transform((v) => (v ? v : null));
 
 export const signUpSchema = z.object({
-  full_name: trimmed(80).min(2, "Escribe tu nombre"),
+  full_name: required(2, 80, "Escribe tu nombre"),
   email: z.string().trim().toLowerCase().email("Correo no válido"),
   password: z.string().min(8, "Mínimo 8 caracteres").max(72, "Máximo 72 caracteres"),
   habeas_data: z.literal("on", { error: "Debes autorizar el tratamiento de datos para registrarte" }),
@@ -43,7 +56,7 @@ export const changePasswordSchema = z
   });
 
 export const storeSchema = z.object({
-  name: trimmed(60).min(2, "Mínimo 2 caracteres"),
+  name: required(2, 60, "Mínimo 2 caracteres"),
   slug: z
     .string()
     .trim()
@@ -63,6 +76,7 @@ export const storeSchema = z.object({
     .refine(isValidWhatsapp, "Número no válido: usa el indicativo y de 10 a 15 dígitos (ej. 573001234567)"),
   logo_url: optionalText(500),
   banner_url: optionalText(500),
+  font: z.enum(STORE_FONT_KEYS, { error: "Elige un tipo de letra de la lista" }).default("atkinson"),
   offers_delivery: z
     .literal("on")
     .optional()
@@ -83,7 +97,7 @@ const money = (label: string) =>
 
 export const productSchema = z
   .object({
-    name: trimmed(80).min(2, "Mínimo 2 caracteres"),
+    name: required(2, 80, "Mínimo 2 caracteres"),
     description: optionalText(1000),
     price: money("Precio"),
     sale_price: z

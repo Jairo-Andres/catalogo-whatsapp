@@ -89,7 +89,6 @@ for (const vp of VIEWPORTS) {
         `/panel/productos/${s.productId}`,
         "/panel/tienda",
         "/panel/ventas",
-        "/panel/estadisticas",
         "/panel/cuenta",
       ]) {
         await page.goto(url);

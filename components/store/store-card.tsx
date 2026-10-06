@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { MapPin, Sparkles } from "lucide-react";
 import { Shape, tileClass } from "@/components/decor";
+import { storeFont } from "@/lib/store-fonts";
 
 export type StoreCardData = {
   slug: string;
@@ -9,6 +10,7 @@ export type StoreCardData = {
   city: string | null;
   logo_url: string | null;
   banner_url?: string | null;
+  font?: string | null;
   category: string | null;
   featured?: boolean;
 };
@@ -74,7 +76,9 @@ export function StoreCard({ store, index = 0 }: { store: StoreCardData; index?: 
         </div>
         <div className="grid gap-1 p-4">
           <p className="truncate font-mono text-xs text-fg-muted">{store.category ?? "Tienda"}</p>
-          <p className="truncate font-display text-xl font-black">{store.name}</p>
+          <p className="truncate font-display text-xl font-black" style={storeFont(store.font).title}>
+            {store.name}
+          </p>
           {store.city && (
             <p className="flex items-center gap-1 text-sm text-fg-muted">
               <MapPin aria-hidden="true" className="size-4" />

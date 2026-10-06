@@ -179,7 +179,6 @@ function ProductFormFields({
             id={id}
             name="name"
             required
-            maxLength={80}
             defaultValue={v?.name ?? product?.name}
             aria-describedby={describedBy}
             aria-invalid={invalid}
@@ -192,7 +191,6 @@ function ProductFormFields({
           <Textarea
             id={id}
             name="description"
-            maxLength={1000}
             rows={3}
             defaultValue={v?.description ?? product?.description ?? ""}
             aria-describedby={describedBy}
