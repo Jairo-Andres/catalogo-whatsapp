@@ -48,5 +48,6 @@ next-env.d.ts
 
 # fixtures generadas por las pruebas e2e
 /tests/e2e/.fixtures/
+/tests/photos/.out/
 
 supabase.env

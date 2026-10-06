@@ -5,3 +5,4 @@ node_modules/
 app/tokens.css
 app/components.css
 public/
+tests/photos/.out/

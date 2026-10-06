@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { saveProduct } from "@/lib/actions/products";
 import type { FormState } from "@/lib/actions/store";
 import { discountPercent, formatCOP, salePriceFromPercent } from "@/lib/format";
+import { clearDraft, draftKey, formToDraft, loadDraft, saveDraft, type ProductDraft } from "@/lib/product-draft";
 import { LIMITS } from "@/lib/site";
 import { Button } from "@/components/ui/button";
 import { Field, FormMessage, Input, Select, Textarea } from "@/components/ui/field";
@@ -24,15 +25,68 @@ export type ProductInput = {
 
 const IMAGE_FIELDS = ["image_url", "image_url_2", "image_url_3"] as const;
 
-export function ProductForm({ storeId, product }: { storeId: string; product?: ProductInput }) {
+type FormProps = { storeId: string; product?: ProductInput };
+
+/**
+ * Formulario de producto con borrador: si Chrome recarga la página (en celulares con poca memoria
+ * pasa al abrir la cámara o la galería), se recupera lo escrito y las fotos ya subidas.
+ */
+export function ProductForm({ storeId, product }: FormProps) {
+  const key = draftKey(storeId, product?.id);
+  const [draft, setDraft] = useState<ProductDraft | null>(null);
+  const [wasDiscarded, setWasDiscarded] = useState(false);
+
+  // sessionStorage y document.wasDiscarded solo existen en el navegador: se leen después de montar.
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- lectura única del navegador al montar */
+    setDraft(loadDraft(key));
+    setWasDiscarded(Boolean((document as Document & { wasDiscarded?: boolean }).wasDiscarded));
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [key]);
+
+  return (
+    <ProductFormFields
+      // Al recuperar un borrador se vuelve a montar el formulario con esos valores.
+      key={draft ? "borrador" : "limpio"}
+      storeId={storeId}
+      product={product}
+      draft={draft}
+      draftStorageKey={key}
+      wasDiscarded={wasDiscarded}
+      onDiscardDraft={() => {
+        clearDraft(key);
+        setDraft(null);
+      }}
+    />
+  );
+}
+
+function ProductFormFields({
+  storeId,
+  product,
+  draft,
+  draftStorageKey,
+  wasDiscarded,
+  onDiscardDraft,
+}: FormProps & {
+  draft: ProductDraft | null;
+  draftStorageKey: string;
+  wasDiscarded: boolean;
+  onDiscardDraft: () => void;
+}) {
   const [state, action, pending] = useActionState<FormState, FormData>(saveProduct, {});
-  const v = state.values;
+  const v = state.values ?? draft ?? undefined;
   const f = state.fields ?? {};
+  const formRef = useRef<HTMLFormElement>(null);
   const [price, setPrice] = useState(v?.price ?? (product ? String(product.price) : ""));
   const [salePrice, setSalePrice] = useState(
     v?.sale_price ?? (product?.sale_price != null ? String(product.sale_price) : ""),
   );
-  const initialPct = product ? discountPercent(product.price, product.sale_price) : null;
+  const initialPct = v
+    ? discountPercent(Number(v.price), v.sale_price ? Number(v.sale_price) : null)
+    : product
+      ? discountPercent(product.price, product.sale_price)
+      : null;
   const [percent, setPercent] = useState(initialPct ? String(initialPct) : "");
   const [isUnique, setIsUnique] = useState(v ? v.is_unique === "on" : Boolean(product?.is_unique));
   // Fotos: se muestra la principal y un botón para agregar más; al editar, tantos espacios como fotos haya.
@@ -47,13 +101,44 @@ export function ProductForm({ storeId, product }: { storeId: string; product?: P
   // El bloque de descuento empieza cerrado, salvo que el producto ya tenga uno.
   const [hasDiscountAtStart] = useState(() => salePrice !== "");
 
+  // Guarda el borrador después de que React actualiza los campos.
+  function persistDraft() {
+    setTimeout(() => {
+      if (formRef.current) saveDraft(draftStorageKey, formToDraft(new FormData(formRef.current)));
+    }, 0);
+  }
+
   const priceNum = Number(price);
   const saleNum = salePrice === "" ? null : Number(salePrice);
   const pct = Number.isFinite(priceNum) ? discountPercent(priceNum, saleNum) : null;
 
   return (
-    <form action={action} className="grid gap-5" noValidate>
+    <form
+      ref={formRef}
+      action={action}
+      onChange={persistDraft}
+      onSubmit={() => clearDraft(draftStorageKey)}
+      className="grid gap-5"
+      noValidate
+    >
       <FormMessage error={state.error} />
+      {draft && !state.values && (
+        <div role="status" className="grid gap-2 rounded-md bg-surface-2 px-4 py-3">
+          <p>
+            <strong>Recuperamos lo que llevabas en este formulario.</strong>{" "}
+            {wasDiscarded && "Chrome recargó la página por falta de memoria."}
+          </p>
+          <Button variant="ghost" size="sm" className="justify-self-start" onClick={onDiscardDraft}>
+            Descartar y empezar de nuevo
+          </Button>
+        </div>
+      )}
+      {!draft && wasDiscarded && (
+        <p role="status" className="rounded-md bg-surface-2 px-4 py-3">
+          Chrome cerró la página por falta de memoria mientras usabas la cámara o la galería. Cierra las pestañas que no
+          uses y vuelve a intentarlo.
+        </p>
+      )}
       {product && <input type="hidden" name="id" value={product.id} />}
 
       <div className="grid gap-2">
@@ -72,6 +157,7 @@ export function ProductForm({ storeId, product }: { storeId: string; product?: P
               name={name}
               label={i === 0 ? "Foto principal" : `Foto ${i + 1}`}
               defaultUrl={initialImages[i] ?? null}
+              onUrlChange={persistDraft}
             />
           ))}
           {photoSlots < IMAGE_FIELDS.length && (

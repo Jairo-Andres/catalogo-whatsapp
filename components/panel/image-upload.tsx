@@ -1,7 +1,15 @@
 "use client";
 
 import { useId, useRef, useState } from "react";
-import { compressToWebp, errorText, imageExtension, isHeic, readIntoMemory } from "@/lib/images";
+import {
+  compressToWebp,
+  errorText,
+  imageExtension,
+  isHeic,
+  photoErrorMessage,
+  readIntoMemory,
+  type PhotoStage,
+} from "@/lib/images";
 import { createClient } from "@/lib/supabase/client";
 import { BUCKET } from "@/lib/storage";
 import { Button } from "@/components/ui/button";
@@ -14,10 +22,21 @@ type Props = {
   defaultUrl?: string | null;
   maxSide?: number;
   aspect?: "square" | "wide";
+  /** Avisa al formulario cuando cambia la foto (para guardar el borrador). */
+  onUrlChange?: (url: string | null) => void;
 };
 
 /** Sube una foto comprimida a la carpeta de la tienda y guarda su URL en un campo oculto. */
-export function ImageUpload({ storeId, folder, name, label, defaultUrl, maxSide, aspect = "square" }: Props) {
+export function ImageUpload({
+  storeId,
+  folder,
+  name,
+  label,
+  defaultUrl,
+  maxSide,
+  aspect = "square",
+  onUrlChange,
+}: Props) {
   const [url, setUrl] = useState<string | null>(defaultUrl ?? null);
   const [status, setStatus] = useState<string>("");
   const [error, setError] = useState<string>("");
@@ -28,88 +47,88 @@ export function ImageUpload({ storeId, folder, name, label, defaultUrl, maxSide,
   const cameraRef = useRef<HTMLInputElement>(null);
   const id = useId();
 
+  function changeUrl(next: string | null) {
+    setUrl(next);
+    onUrlChange?.(next);
+  }
+
+  function fail(stage: PhotoStage, err: unknown, info: string) {
+    console.error(`Error con la foto (${stage})`, err);
+    const { message, canRepick } = photoErrorMessage(stage, err);
+    setStatus("");
+    setError(message);
+    setCanRepick(canRepick);
+    setDetail(`${info} · ${errorText(err)}`);
+  }
+
   async function onChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const picked = e.target.files?.[0];
+    const input = e.target;
+    const picked = input.files?.[0];
     if (!picked) return;
     setError("");
     setDetail("");
     setCanRepick(false);
     // Algunas galerías mandan las HEIC sin tipo: se aceptan por la extensión.
     if (!picked.type.startsWith("image/") && !isHeic(picked)) {
-      e.target.value = "";
+      input.value = "";
       setError("El archivo debe ser una imagen (JPG, PNG, WebP o HEIC).");
       return;
     }
     if (picked.size > 60 * 1024 * 1024) {
-      e.target.value = "";
+      input.value = "";
       setError("La imagen pesa más de 60 MB. Elige otra.");
       return;
     }
     const info = `${picked.type || "sin tipo"}, ${(picked.size / 1024 / 1024).toFixed(1)} MB`;
     setBusy(true);
-
-    // 1. Copia en memoria antes que nada: en Chrome Android el archivo elegido puede dejar de leerse.
-    let file: File;
     try {
-      setStatus("Leyendo la foto…");
-      file = await readIntoMemory(picked);
-    } catch (err) {
-      console.error("Error al leer la foto", err);
-      setStatus("");
-      setError(
-        "El celular todavía estaba preparando esta foto (en algunos Android pasa la primera vez que se elige). Toca «Elegir de nuevo» y elige la misma foto: la segunda vez sí carga.",
-      );
-      setCanRepick(true);
-      setDetail(`${info} · ${errorText(err)}`);
-      setBusy(false);
-      e.target.value = "";
-      return;
-    }
-    e.target.value = "";
-
-    // 2. Comprimir (siempre sobre la copia en memoria).
-    let image: File;
-    try {
-      setStatus("Comprimiendo la foto…");
-      image = await compressToWebp(file, maxSide);
-    } catch (err) {
-      console.error("Error al procesar la foto", err);
-      setStatus("");
-      setError("No pudimos procesar esta foto. Prueba con otra o tómale captura de pantalla.");
-      setDetail(`${info} · ${errorText(err)}`);
-      setBusy(false);
-      return;
-    }
-
-    // 3. Subir; si falla la red, se reintenta una vez.
-    try {
-      setStatus("Subiendo…");
-      // randomUUID solo existe en https/localhost; en otro caso basta un nombre aleatorio.
-      const fileId =
-        typeof crypto.randomUUID === "function"
-          ? crypto.randomUUID()
-          : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-      const path = `${storeId}/${folder}/${fileId}.${imageExtension(image.type)}`;
-      const body = new Blob([await image.arrayBuffer()], { type: image.type });
-      const supabase = createClient();
-      const upload = () =>
-        supabase.storage
-          .from(BUCKET)
-          .upload(path, body, { contentType: image.type, cacheControl: "31536000", upsert: false });
-      let { error: upErr } = await upload();
-      if (upErr && /fetch|network/i.test(upErr.message)) {
-        await new Promise((r) => setTimeout(r, 1000));
-        ({ error: upErr } = await upload());
+      // 1. Copia en memoria antes que nada: en Chrome Android el archivo elegido puede dejar de leerse.
+      let file: File;
+      try {
+        setStatus("Leyendo la foto…");
+        file = await readIntoMemory(picked);
+      } catch (err) {
+        fail("read", err, info);
+        return;
+      } finally {
+        input.value = "";
       }
-      if (upErr) throw upErr;
-      setUrl(supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl);
-      setStatus(`Foto lista (${Math.round(image.size / 1024)} KB, antes ${Math.round(picked.size / 1024)} KB).`);
-    } catch (err) {
-      console.error("Error al subir la foto", err);
-      setStatus("");
-      const message = err instanceof Error && err.message ? ` (${err.message})` : "";
-      setError(`No pudimos subir la foto${message}. Intenta de nuevo.`);
-      setDetail(`${info} · ${errorText(err)}`);
+
+      // 2. Comprimir (siempre sobre la copia en memoria).
+      let image: File;
+      try {
+        setStatus("Comprimiendo la foto…");
+        image = await compressToWebp(file, maxSide);
+      } catch (err) {
+        fail("compress", err, info);
+        return;
+      }
+
+      // 3. Subir; si falla la red, se reintenta una vez.
+      try {
+        setStatus("Subiendo…");
+        // randomUUID solo existe en https/localhost; en otro caso basta un nombre aleatorio.
+        const fileId =
+          typeof crypto.randomUUID === "function"
+            ? crypto.randomUUID()
+            : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+        const path = `${storeId}/${folder}/${fileId}.${imageExtension(image.type)}`;
+        const supabase = createClient();
+        const upload = () =>
+          supabase.storage
+            .from(BUCKET)
+            .upload(path, image, { contentType: image.type, cacheControl: "31536000", upsert: false });
+        let { error: upErr } = await upload();
+        if (upErr && /fetch|network/i.test(upErr.message)) {
+          await new Promise((r) => setTimeout(r, 1000));
+          ({ error: upErr } = await upload());
+        }
+        if (upErr) throw upErr;
+        changeUrl(supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl);
+        setStatus(`Foto lista (${Math.round(image.size / 1024)} KB, antes ${Math.round(picked.size / 1024)} KB).`);
+      } catch (err) {
+        fail("upload", err, info);
+      }
     } finally {
       setBusy(false);
     }
@@ -175,7 +194,7 @@ export function ImageUpload({ storeId, folder, name, label, defaultUrl, maxSide,
               variant="ghost"
               size="sm"
               onClick={() => {
-                setUrl(null);
+                changeUrl(null);
                 setStatus("Foto quitada. Guarda para aplicar.");
               }}
             >
@@ -193,14 +212,9 @@ export function ImageUpload({ storeId, folder, name, label, defaultUrl, maxSide,
         </p>
       )}
       {error && canRepick && !busy && (
-        <div className="flex flex-wrap gap-2">
-          <Button size="sm" onClick={() => inputRef.current?.click()}>
-            Elegir de nuevo
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => cameraRef.current?.click()}>
-            Tomar foto
-          </Button>
-        </div>
+        <Button size="sm" className="justify-self-start" onClick={() => inputRef.current?.click()}>
+          Elegir de nuevo
+        </Button>
       )}
       {error && detail && <p className="text-xs break-words text-fg-muted">Detalle técnico: {detail}</p>}
     </fieldset>

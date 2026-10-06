@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Paquete generado por las pruebas de fotos.
+    "tests/photos/.out/**",
   ]),
 ]);
 
