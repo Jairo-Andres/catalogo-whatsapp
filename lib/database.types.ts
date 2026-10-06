@@ -3,7 +3,25 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 
 export type Database = {
   
-  "public": {
+  "graphql_public": {
+          Tables: {
+            [_ in never]: never
+          }
+          Views: {
+            [_ in never]: never
+          }
+          Functions: {
+            "graphql":
+{ Args: { "extensions"?: Json,"operationName"?: string,"query"?: string,"variables"?: Json }; Returns: Json
+                           }
+          }
+          Enums: {
+            [_ in never]: never
+          }
+          CompositeTypes: {
+            [_ in never]: never
+          }
+        },"public": {
           Tables: {
             "events": {
                   Row: {
@@ -208,23 +226,8 @@ isOneToOne: true
               "city": string,"created_at": string,"featured": boolean,"id": string,"name": string,"products": number,"slug": string,"status": Database["public"]['Enums']["store_status"],"visits_30d": number
             }[]
                            },
-"can_see_store":
-{ Args: { "p_store_id": string }; Returns: boolean
-                           },
-"is_admin":
-{ Args: Record<PropertyKey, never>; Returns: boolean
-                           },
-"is_my_store_folder":
-{ Args: { "p_name": string }; Returns: boolean
-                           },
 "mark_product_sold":
 { Args: { "p_product_id": string,"p_quantity"?: number }; Returns: undefined
-                           },
-"owns_store":
-{ Args: { "p_store_id": string }; Returns: boolean
-                           },
-"product_store_id":
-{ Args: { "p_product_id": string }; Returns: string
                            },
 "stats_by_day":
 { Args: { "p_days"?: number,"p_store_id": string }; Returns: {
@@ -363,7 +366,11 @@ export type CompositeTypes<
   : never
 
 export const Constants = {
-  "public": {
+  "graphql_public": {
+          Enums: {
+            
+          }
+        },"public": {
           Enums: {
             "event_type": ["visita_tienda", "visita_producto", "clic_pedir", "producto_en_pedido"],"product_status": ["disponible", "agotado", "vendido"],"store_status": ["pendiente", "activa", "suspendida"],"user_role": ["vendedor", "admin"]
           }

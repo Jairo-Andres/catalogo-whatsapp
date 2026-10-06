@@ -34,15 +34,15 @@ La app solo usa la **publishable key** (pública). La seguridad está en la base
 
 Todo corre en local y en GitHub Actions (`.github/workflows/ci.yml`).
 
-| Verificación                                                                                                 | Comando                                                     | Resultado (6 oct 2026)                                     |
-| ------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------- | ---------------------------------------------------------- |
-| Lint, tipos y formato                                                                                        | `npm run lint && npm run typecheck && npm run format:check` | sin errores                                                |
-| Unitarias (precios, descuentos, slugs, mensaje de WhatsApp, validaciones)                                    | `npm test`                                                  | 12 pasan                                                   |
-| Seguridad de la base (RLS, triggers, funciones, Storage) con 2 vendedores, admin y anónimo                   | `npm run test:db`                                           | 41 pasan en Postgres 16 y en Supabase local (Postgres 17)  |
-| Seguridad por la API HTTP real (Auth + PostgREST + Storage)                                                  | `npm run test:api`                                          | 10 pasan                                                   |
-| Asesor de seguridad y rendimiento de Supabase                                                                | `npm run db:advisors`                                       | 0 avisos (solo "índice sin uso" informativo en base vacía) |
-| Navegador de punta a punta (registro → tienda → producto con foto → aprobación → carrito → WhatsApp → venta) | `npm run test:e2e`                                          | 9 pasan                                                    |
-| Accesibilidad axe WCAG 2.2 A/AA en todas las páginas, 390 y 1280 px, claro y oscuro                          | `npm run test:e2e`                                          | 12 recorridos, 0 incumplimientos, sin desborde horizontal  |
+| Verificación                                                                                                 | Comando                                                     | Resultado (6 oct 2026)                                          |
+| ------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------- | --------------------------------------------------------------- |
+| Lint, tipos y formato                                                                                        | `npm run lint && npm run typecheck && npm run format:check` | sin errores                                                     |
+| Unitarias (precios, descuentos, slugs, mensaje de WhatsApp, validaciones)                                    | `npm test`                                                  | 12 pasan                                                        |
+| Seguridad de la base (RLS, triggers, funciones, Storage) con 2 vendedores, admin y anónimo                   | `npm run test:db`                                           | 41 pasan en Postgres 16 y en Supabase local (Postgres 17)       |
+| Seguridad por la API HTTP real (Auth + PostgREST + Storage)                                                  | `npm run test:api`                                          | 10 pasan                                                        |
+| Asesor de seguridad y rendimiento de Supabase                                                                | `npm run db:advisors`                                       | 0 avisos en local; en la nube solo el esperado de `track_event` |
+| Navegador de punta a punta (registro → tienda → producto con foto → aprobación → carrito → WhatsApp → venta) | `npm run test:e2e`                                          | 9 pasan                                                         |
+| Accesibilidad axe WCAG 2.2 A/AA en todas las páginas, 390 y 1280 px, claro y oscuro                          | `npm run test:e2e`                                          | 12 recorridos, 0 incumplimientos, sin desborde horizontal       |
 
 Detalles que prueban las pruebas: un vendedor no puede leer ni cambiar tienda, productos, ventas, eventos ni fotos de otro; nadie se vuelve admin desde el navegador; el vendedor no puede aprobar su propia tienda; una visita cuenta una vez cada 30 minutos y el dueño no cuenta; vender más que el stock se rechaza; la foto de 3000×3000 px se sube como WebP de menos de 260 KB; un carrito de 30 productos cabe en el enlace de WhatsApp.
 
@@ -68,13 +68,13 @@ Pruebas completas: `npx supabase db reset && npm run test:db` (modo Postgres sim
 ## Despliegue (planes gratis)
 
 1. **Supabase**: crea un proyecto **nuevo**, separado del de la API de datos abiertos (aquí hay datos personales de vendedores). Región sugerida: `us-east-1`.
-2. **Migraciones**: `npx supabase login`, `npx supabase link --project-ref TU-REF` y `npx supabase db push`. O pega en el editor SQL, en orden, los 3 archivos de `supabase/migrations/`. El bucket `catalogo` y sus políticas se crean ahí mismo.
+2. **Migraciones**: `npx supabase login`, `npx supabase link --project-ref TU-REF` y `npx supabase db push`. O pega en el editor SQL, en orden, los 4 archivos de `supabase/migrations/`. El bucket `catalogo` y sus políticas se crean ahí mismo. El proyecto actual (`faminwczhvkfnscmdhui`) ya las tiene aplicadas con el conector de Supabase, con otras fechas de versión: no corras `db push` sobre él sin antes `npx supabase migration repair`.
 3. **Auth → URL Configuration**: _Site URL_ = tu URL de Vercel; _Redirect URLs_ = `https://TU-APP.vercel.app/auth/callback` y `http://localhost:3000/**`.
 4. **Auth → Email**: la confirmación de correo viene encendida. El correo integrado de Supabase tiene un límite bajo de envíos por hora (verificar el valor actual en el panel); para un piloto real configura un SMTP propio. El enlace de confirmación debe abrirse en el mismo navegador donde se hizo el registro.
 5. **Vercel**: importa el repositorio (framework Next.js) y agrega `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` y `NEXT_PUBLIC_SITE_URL`. Cada push a la rama principal despliega solo.
 6. **Admin**: regístrate en la web y corre el SQL de arriba en el editor SQL de Supabase.
 7. **Tienda demo** para quien visite el portafolio: crea una cuenta de vendedor, sube 4 a 6 productos marcados como ejemplo y apruébala desde `/admin/tiendas`.
-8. **Asesor**: en Supabase, _Advisors → Security_ y _Performance_ deben quedar sin avisos.
+8. **Asesor**: en Supabase, _Advisors → Security_ y _Performance_. Queda un solo aviso esperado: `track_event` es `security definer` y la puede llamar un visitante anónimo a propósito, porque es la única vía para registrar visitas (valida tienda, producto, visitante y frecuencia). Las funciones de ayuda de la RLS viven en el esquema `private`, que la API no expone. El índice sin uso es informativo mientras la base esté vacía.
 
 ## Qué revisar si algo se cae
 
@@ -125,7 +125,7 @@ Del cliente no se guardan datos personales: su nombre y la nota solo viajan en e
 
 **Run locally.** `npm install`, `npx supabase start`, copy `.env.example` to `.env.local` with the printed URL and publishable key, `npm run dev`.
 
-**Deploy.** New Supabase project → `supabase db push` (or paste the 3 migrations) → set Auth Site URL and redirect `/auth/callback` → import into Vercel with the 3 env vars → sign up and promote yourself to admin with the SQL above.
+**Deploy.** New Supabase project → `supabase db push` (or paste the 4 migrations) → set Auth Site URL and redirect `/auth/callback` → import into Vercel with the 3 env vars → sign up and promote yourself to admin with the SQL above.
 
 **If something goes down.** Check whether the free Supabase project is paused (restore it), the Vercel env vars, the Auth redirect URLs, and the email sending limit. See the Spanish table above for the full checklist.
 
