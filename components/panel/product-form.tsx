@@ -34,6 +34,11 @@ export function ProductForm({ storeId, product }: { storeId: string; product?: P
   const initialPct = product ? discountPercent(product.price, product.sale_price) : null;
   const [percent, setPercent] = useState(initialPct ? String(initialPct) : "");
   const [isUnique, setIsUnique] = useState(v ? v.is_unique === "on" : Boolean(product?.is_unique));
+  // Fotos: se muestra la principal y un botón para agregar más; al editar, tantos espacios como fotos haya.
+  const initialImages = IMAGE_FIELDS.map((name, i) => (v ? v[name] || null : (product?.images[i] ?? null)));
+  const [photoSlots, setPhotoSlots] = useState(() =>
+    Math.max(1, initialImages.reduce((last, url, i) => (url ? i + 1 : last), 0)),
+  );
 
   const priceNum = Number(price);
   const saleNum = salePrice === "" ? null : Number(salePrice);
@@ -52,16 +57,26 @@ export function ProductForm({ storeId, product }: { storeId: string; product?: P
           La principal sale en el catálogo; en la página del producto el cliente desliza para ver las demás.
         </p>
         <div className="grid gap-4 rounded-lg border border-border p-4">
-          {IMAGE_FIELDS.map((name, i) => (
+          {IMAGE_FIELDS.slice(0, photoSlots).map((name, i) => (
             <ImageUpload
               key={name}
               storeId={storeId}
               folder="productos"
               name={name}
               label={i === 0 ? "Foto principal" : `Foto ${i + 1}`}
-              defaultUrl={v ? v[name] || null : (product?.images[i] ?? null)}
+              defaultUrl={initialImages[i] ?? null}
             />
           ))}
+          {photoSlots < IMAGE_FIELDS.length && (
+            <Button
+              variant="secondary"
+              size="sm"
+              className="justify-self-start"
+              onClick={() => setPhotoSlots((n) => Math.min(n + 1, IMAGE_FIELDS.length))}
+            >
+              + Agregar otra foto
+            </Button>
+          )}
         </div>
       </div>
 

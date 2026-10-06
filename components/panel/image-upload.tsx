@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useRef, useState } from "react";
-import { compressToWebp } from "@/lib/images";
+import { compressToWebp, imageExtension } from "@/lib/images";
 import { createClient } from "@/lib/supabase/client";
 import { BUCKET } from "@/lib/storage";
 import { Button } from "@/components/ui/button";
@@ -39,21 +39,37 @@ export function ImageUpload({ storeId, folder, name, label, defaultUrl, maxSide,
       return;
     }
     setBusy(true);
+    let image: File;
     try {
       setStatus("Comprimiendo la foto…");
-      const webp = await compressToWebp(file, maxSide);
+      image = await compressToWebp(file, maxSide);
+    } catch (e) {
+      console.error("Error al procesar la foto", e);
+      setStatus("");
+      setError("No pudimos procesar esta foto. Prueba con otra o tómale captura de pantalla.");
+      setBusy(false);
+      return;
+    }
+    try {
       setStatus("Subiendo…");
-      const path = `${storeId}/${folder}/${crypto.randomUUID()}.webp`;
+      // randomUUID solo existe en https/localhost; en otro caso basta un nombre aleatorio.
+      const fileId =
+        typeof crypto.randomUUID === "function"
+          ? crypto.randomUUID()
+          : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+      const path = `${storeId}/${folder}/${fileId}.${imageExtension(image.type)}`;
       const supabase = createClient();
       const { error: upErr } = await supabase.storage
         .from(BUCKET)
-        .upload(path, webp, { contentType: "image/webp", cacheControl: "31536000", upsert: false });
+        .upload(path, image, { contentType: image.type, cacheControl: "31536000", upsert: false });
       if (upErr) throw upErr;
       setUrl(supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl);
-      setStatus(`Foto lista (${Math.round(webp.size / 1024)} KB, antes ${Math.round(file.size / 1024)} KB).`);
-    } catch {
+      setStatus(`Foto lista (${Math.round(image.size / 1024)} KB, antes ${Math.round(file.size / 1024)} KB).`);
+    } catch (e) {
+      console.error("Error al subir la foto", e);
       setStatus("");
-      setError("No pudimos subir la foto. Revisa tu conexión e intenta de nuevo.");
+      const detail = e instanceof Error && e.message ? ` (${e.message})` : "";
+      setError(`No pudimos subir la foto${detail}. Intenta de nuevo.`);
     } finally {
       setBusy(false);
     }
