@@ -56,7 +56,7 @@ test("el vendedor se registra y crea su tienda en una pantalla", async ({ page }
 
 test("crea un producto con 3 fotos comprimidas y descuento", async ({ page }) => {
   await login(page, seller, "/panel/productos/nuevo");
-  const files = page.locator('input[type="file"]');
+  const files = page.locator('input[type="file"]:not([capture])');
   await expect(files).toHaveCount(1);
   const addPhoto = page.getByRole("button", { name: "Agregar otra foto" });
   await addPhoto.click();
@@ -108,7 +108,10 @@ test("crea un producto con 3 fotos comprimidas y descuento", async ({ page }) =>
   // Y volver a 3 para el resto de pruebas.
   await page.goto(`/panel/productos/${productId}`);
   await page.getByRole("button", { name: "Agregar otra foto" }).click();
-  await page.locator('input[type="file"]').nth(2).setInputFiles(path.resolve(__dirname, ".fixtures/foto-2.png"));
+  await page
+    .locator('input[type="file"]:not([capture])')
+    .nth(2)
+    .setInputFiles(path.resolve(__dirname, ".fixtures/foto-2.png"));
   await expect(page.getByText(/Foto lista/)).toHaveCount(1, { timeout: 30_000 });
   await page.getByRole("button", { name: "Guardar cambios" }).click();
   await expect(page).toHaveURL(/guardado=editado/);

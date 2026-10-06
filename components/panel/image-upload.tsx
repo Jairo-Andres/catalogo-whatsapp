@@ -25,6 +25,7 @@ export function ImageUpload({ storeId, folder, name, label, defaultUrl, maxSide,
   const [canRepick, setCanRepick] = useState(false);
   const [busy, setBusy] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
   const id = useId();
 
   async function onChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -56,7 +57,7 @@ export function ImageUpload({ storeId, folder, name, label, defaultUrl, maxSide,
       console.error("Error al leer la foto", err);
       setStatus("");
       setError(
-        "El celular no dejó leer esta foto. Vuelve a elegirla; si sigue pasando, elígela desde «Archivos» o «Mis archivos» en vez de la Galería.",
+        "El celular todavía estaba preparando esta foto (en algunos Android pasa la primera vez que se elige). Toca «Elegir de nuevo» y elige la misma foto: la segunda vez sí carga.",
       );
       setCanRepick(true);
       setDetail(`${info} · ${errorText(err)}`);
@@ -143,6 +144,18 @@ export function ImageUpload({ storeId, folder, name, label, defaultUrl, maxSide,
             onChange={onChange}
             disabled={busy}
           />
+          {/* La cámara le entrega la foto directo al navegador, sin pasar por la galería. */}
+          <input
+            ref={cameraRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="sr-only"
+            tabIndex={-1}
+            aria-label={`${label}: tomar foto con la cámara`}
+            onChange={onChange}
+            disabled={busy}
+          />
           <Button
             variant="secondary"
             size="sm"
@@ -152,6 +165,11 @@ export function ImageUpload({ storeId, folder, name, label, defaultUrl, maxSide,
           >
             {busy ? "Procesando…" : url ? "Cambiar foto" : "Elegir foto"}
           </Button>
+          {!busy && (
+            <Button variant="secondary" size="sm" onClick={() => cameraRef.current?.click()}>
+              Tomar foto
+            </Button>
+          )}
           {url && !busy && (
             <Button
               variant="ghost"
@@ -175,9 +193,14 @@ export function ImageUpload({ storeId, folder, name, label, defaultUrl, maxSide,
         </p>
       )}
       {error && canRepick && !busy && (
-        <Button variant="secondary" size="sm" className="justify-self-start" onClick={() => inputRef.current?.click()}>
-          Elegir de nuevo
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" onClick={() => inputRef.current?.click()}>
+            Elegir de nuevo
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => cameraRef.current?.click()}>
+            Tomar foto
+          </Button>
+        </div>
       )}
       {error && detail && <p className="text-xs break-words text-fg-muted">Detalle técnico: {detail}</p>}
     </fieldset>
