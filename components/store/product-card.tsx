@@ -1,10 +1,11 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { ProductRow } from "@/lib/queries";
 import { effectivePrice } from "@/lib/format";
-import { PRODUCT_STATUS, StatusBadge } from "@/components/ui/badge";
+import { PRODUCT_STATUS } from "@/components/ui/badge";
+import { ShapePair, tileClass } from "@/components/decor";
 import { AddToCart } from "./add-to-cart";
 import { Price } from "./price";
-import { ProductThumb } from "./product-image";
 
 export function ProductCard({
   product,
@@ -21,27 +22,35 @@ export function ProductCard({
   const status = PRODUCT_STATUS[product.status];
   return (
     <li
-      className="rise flex min-w-0 flex-col overflow-hidden rounded-lg border border-border bg-bg shadow-sm"
+      className="rise mt-card flex flex-col overflow-hidden p-0"
       style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
     >
-      <Link href={`/${slug}/${product.id}`} className="group grid gap-2 p-0 no-underline">
-        <div className="relative">
-          <ProductThumb
-            url={product.image_url}
-            className={`aspect-square w-full ${available ? "" : "opacity-60"}`}
-            sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
-            priority={index < 2}
-          />
+      <Link href={`/${slug}/${product.id}`} className="group grid no-underline">
+        <div
+          className={`relative grid aspect-[16/14] place-items-center overflow-hidden ${available ? tileClass(index) : "mt-tile-off"}`}
+        >
+          {product.image_url ? (
+            <Image
+              src={product.image_url}
+              alt=""
+              fill
+              sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+              className={`object-cover ${available ? "" : "opacity-60 grayscale"}`}
+              priority={index < 2}
+            />
+          ) : (
+            <ShapePair index={index} muted={!available} />
+          )}
           {!available && (
-            <StatusBadge tone={status.tone} className="absolute left-2 top-2">
-              {status.label}
-            </StatusBadge>
+            <span className={`mt-badge mt-badge--${status.tone} absolute left-2.5 top-2.5`}>{status.label}</span>
           )}
         </div>
-        <h3 className="line-clamp-2 px-3 font-bold leading-snug group-hover:underline">{product.name}</h3>
+        <h3 className="line-clamp-2 px-4 pt-3 font-display text-base font-black leading-snug group-hover:underline sm:text-lg">
+          {product.name}
+        </h3>
       </Link>
-      <div className="mt-auto grid gap-2 px-3 pb-3 pt-1">
-        <Price price={product.price} salePrice={product.sale_price} />
+      <div className="mt-auto grid gap-3 px-4 pb-4 pt-2">
+        <Price price={product.price} salePrice={product.sale_price} muted={!available} />
         {available ? (
           <AddToCart
             storeId={storeId}
@@ -51,8 +60,11 @@ export function ProductCard({
             className="w-full"
           />
         ) : (
-          <p className="text-sm text-fg-muted">
-            {product.status === "agotado" ? "Sin unidades por ahora" : "Ya se vendió"}
+          <p className="ja-btn ja-btn--sm pointer-events-none w-full bg-surface-2 text-fg-muted shadow-[inset_0_-3px_0_var(--color-border)]">
+            No disponible
+            <span className="sr-only">
+              : {product.status === "agotado" ? "sin unidades por ahora" : "ya se vendió"}
+            </span>
           </p>
         )}
       </div>

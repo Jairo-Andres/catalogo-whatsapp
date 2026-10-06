@@ -20,6 +20,28 @@ export const signInSchema = z.object({
   password: z.string().min(1, "Escribe tu contraseña"),
 });
 
+/** Misma regla de clave que el registro. */
+const newPassword = z.string().min(8, "Mínimo 8 caracteres").max(72, "Máximo 72 caracteres");
+
+export const changeEmailSchema = z.object({
+  email: z.string().trim().toLowerCase().email("Correo no válido"),
+});
+
+export const changePasswordSchema = z
+  .object({
+    current_password: z.string().min(1, "Escribe tu contraseña actual"),
+    new_password: newPassword,
+    confirm_password: z.string(),
+  })
+  .refine((d) => d.new_password === d.confirm_password, {
+    path: ["confirm_password"],
+    message: "Las contraseñas no coinciden",
+  })
+  .refine((d) => d.new_password !== d.current_password, {
+    path: ["new_password"],
+    message: "La nueva contraseña debe ser distinta de la actual",
+  });
+
 export const storeSchema = z.object({
   name: trimmed(60).min(2, "Mínimo 2 caracteres"),
   slug: z

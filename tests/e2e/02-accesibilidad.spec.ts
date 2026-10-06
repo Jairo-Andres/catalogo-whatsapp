@@ -70,7 +70,7 @@ for (const vp of VIEWPORTS) {
       // Carrito abierto (diálogo)
       await page.goto(`/${s.slug}`);
       await page.getByRole("button", { name: /Agregar Torta/ }).click();
-      await page.getByRole("button", { name: "Ver pedido" }).click();
+      await page.getByRole("button", { name: "Pedir por WhatsApp" }).click();
       await expect(page.getByRole("dialog", { name: "Tu pedido" })).toBeVisible();
       await audit(page, `carrito ${vp.name} ${scheme}`);
       await page.screenshot({ path: `${SHOTS}/${vp.name}-${scheme}-carrito.png` });

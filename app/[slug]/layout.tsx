@@ -22,7 +22,7 @@ export default async function StoreLayout({ children, params }: LayoutProps<"/[s
         </p>
       )}
       {children}
-      <div className="h-20" aria-hidden="true" />
+      <div className="h-28" aria-hidden="true" />
       <CartBar
         store={{
           id: store.id,

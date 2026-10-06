@@ -6,7 +6,7 @@ import { AddToCart } from "@/components/store/add-to-cart";
 import { Price } from "@/components/store/price";
 import { ProductGallery } from "@/components/store/product-gallery";
 import { TrackView } from "@/components/store/track-view";
-import { PRODUCT_STATUS, StatusBadge } from "@/components/ui/badge";
+import { PRODUCT_STATUS } from "@/components/ui/badge";
 import { effectivePrice, formatCOP } from "@/lib/format";
 import { getProduct } from "@/lib/queries";
 import { getStoreBySlug } from "@/lib/public-store";
@@ -54,21 +54,36 @@ export default async function ProductPage({ params }: PageProps<"/[slug]/[produc
   const url = `${siteUrl()}/${store.slug}/${product.id}`;
 
   return (
-    <div className="mx-auto grid max-w-6xl gap-6 px-4 py-6">
+    <div className="mx-auto grid max-w-6xl gap-4 px-4 py-6">
       <TrackView storeId={store.id} productId={product.id} />
-      <Link href={`/${store.slug}`} className="ja-btn ja-btn--ghost w-fit px-2">
-        <ArrowLeft aria-hidden="true" className="size-5" /> {store.name}
-      </Link>
+      <nav aria-label="Migas de pan">
+        <ol className="flex flex-wrap items-center gap-2 font-mono text-xs uppercase tracking-[0.12em] text-fg-muted">
+          <li>
+            <Link href="/tiendas" className="inline-flex min-h-11 items-center underline-offset-4 hover:underline">
+              Tiendas
+            </Link>
+          </li>
+          <li aria-hidden="true">/</li>
+          <li>
+            <Link
+              href={`/${store.slug}`}
+              className="inline-flex min-h-11 items-center gap-1 font-bold text-fg underline-offset-4 hover:underline"
+            >
+              <ArrowLeft aria-hidden="true" className="size-4" /> {store.name}
+            </Link>
+          </li>
+        </ol>
+      </nav>
       <article className="grid gap-6 md:grid-cols-2 md:gap-10">
-        <ProductGallery images={product.images} name={product.name} className="aspect-square w-full rounded-lg" />
-        <div className="grid content-start gap-4">
+        <ProductGallery
+          images={product.images}
+          name={product.name}
+          className="mt-tile-2 aspect-square w-full rounded-3xl"
+        />
+        <div className="mt-card grid content-start gap-4 sm:p-8">
           <h1 className="ja-display text-3xl sm:text-4xl">{product.name}</h1>
           <Price price={product.price} salePrice={product.sale_price} size="lg" />
-          {!available && (
-            <StatusBadge tone={status.tone} className="w-fit">
-              {status.label}
-            </StatusBadge>
-          )}
+          {!available && <span className={`mt-badge mt-badge--${status.tone} w-fit`}>{status.label}</span>}
           {product.description && <p className="whitespace-pre-line">{product.description}</p>}
           {available && (
             <AddToCart

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BrandMark } from "@/components/site-header";
-import { buttonClass } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
+import { BrandLink } from "@/components/site-header";
 import { signOut } from "@/lib/actions/auth";
 import { requireAdmin } from "@/lib/auth";
 
@@ -11,26 +11,25 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   await requireAdmin();
   return (
     <>
-      <header className="border-b border-border bg-fg text-bg">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-2">
-          <Link href="/admin" className="flex min-h-11 items-center gap-2 font-display font-black">
-            <BrandMark /> Administración
-          </Link>
-          <nav aria-label="Administración" className="flex flex-wrap items-center gap-1">
-            <Link href="/admin" className="ja-btn ja-btn--sm text-bg underline-offset-4 hover:underline">
+      <header className="px-3 pt-3 sm:px-4">
+        <div className="mt-nav mx-auto max-w-6xl flex-wrap">
+          <BrandLink label="Administración" href="/admin" />
+          <nav aria-label="Administración" className="flex flex-wrap items-center gap-0.5">
+            <Link href="/admin" className="mt-nav__link">
               Métricas
             </Link>
-            <Link href="/admin/tiendas" className="ja-btn ja-btn--sm text-bg underline-offset-4 hover:underline">
+            <Link href="/admin/tiendas" className="mt-nav__link">
               Tiendas
             </Link>
-            <Link href="/" className="ja-btn ja-btn--sm text-bg underline-offset-4 hover:underline">
+            <Link href="/panel/cuenta" className="mt-nav__link">
+              Cuenta
+            </Link>
+            <Link href="/" className="mt-nav__link">
               Sitio
             </Link>
             <form action={signOut}>
-              <button
-                type="submit"
-                className={buttonClass("ghost", "sm", "text-bg hover:bg-transparent hover:underline")}
-              >
+              <button type="submit" className="mt-nav__link gap-1.5">
+                <LogOut aria-hidden="true" className="size-4" />
                 Salir
               </button>
             </form>

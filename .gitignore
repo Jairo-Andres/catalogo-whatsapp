@@ -51,3 +51,6 @@ next-env.d.ts
 /tests/photos/.out/
 
 supabase.env
+
+# capturas de la revisión visual del diseño
+/capturas-diseno/

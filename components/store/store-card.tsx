@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { MapPin } from "lucide-react";
+import { ShapePair } from "@/components/decor";
 
 export type StoreCardData = {
   slug: string;
@@ -11,40 +11,34 @@ export type StoreCardData = {
   featured?: boolean;
 };
 
+/** Tarjeta de tienda: parte superior beige con el logo (o figuras), categoría · ciudad y "Ver catálogo". */
 export function StoreCard({ store, index = 0 }: { store: StoreCardData; index?: number }) {
-  const initials = store.name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase();
+  const meta = [store.category ?? "Tienda", store.city].filter(Boolean).join(" · ");
   return (
     <li className="rise" style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}>
       <Link
         href={`/${store.slug}`}
-        className="flex min-h-24 items-center gap-4 rounded-lg border border-border bg-bg p-4 shadow-sm transition-shadow duration-[var(--duration-base)] hover:shadow-md"
+        className="group mt-card flex h-full flex-col overflow-hidden p-0 no-underline transition-transform duration-[var(--duration-base)] hover:-translate-y-0.5"
       >
-        <div className="size-16 shrink-0 overflow-hidden rounded-md bg-surface-2">
+        <div className="mt-beige grid h-36 place-items-center">
           {store.logo_url ? (
-            <Image src={store.logo_url} alt="" width={64} height={64} className="size-full object-cover" />
+            <Image
+              src={store.logo_url}
+              alt=""
+              width={96}
+              height={96}
+              className="size-24 rounded-2xl object-cover shadow-md"
+            />
           ) : (
-            <div
-              className="grid size-full place-items-center bg-fg font-display text-xl font-black text-bg"
-              aria-hidden="true"
-            >
-              {initials}
-            </div>
+            <ShapePair index={index} />
           )}
         </div>
-        <div className="min-w-0">
-          <p className="truncate font-display text-lg font-black">{store.name}</p>
-          <p className="ja-card__meta">{store.category ?? "Tienda"}</p>
-          {store.city && (
-            <p className="flex items-center gap-1 text-sm text-fg-muted">
-              <MapPin aria-hidden="true" className="size-4" />
-              {store.city}
-            </p>
-          )}
+        <div className="grid gap-1 p-4">
+          <p className="truncate font-mono text-xs text-fg-muted">{meta}</p>
+          <p className="truncate font-display text-xl font-black">{store.name}</p>
+          <p className="font-bold text-ink-b group-hover:underline">
+            Ver catálogo <span aria-hidden="true">→</span>
+          </p>
         </div>
       </Link>
     </li>

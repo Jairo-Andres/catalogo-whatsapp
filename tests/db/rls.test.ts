@@ -490,6 +490,29 @@ describe("administración", () => {
     await expect(as(db, B(), () => db.query(`select public.admin_stores()`))).rejects.toThrow(/No autorizado/);
   });
 
+  it("admin_store_usage: correo, fotos y espacio por tienda, solo para el admin", async () => {
+    const usage = () => as(db, ADMIN(), async () => (await db.query(`select * from public.admin_store_usage()`)).rows);
+    const before = (await usage()).find((r) => r.store_id === ids.storeA);
+    await db.query(
+      `insert into storage.objects (bucket_id, name, metadata) values
+         ('catalogo', $1 || '/productos/uso-1.webp', '{"size": 1500}'),
+         ('catalogo', $1 || '/marca/uso-2.webp', '{"size": 500}')`,
+      [ids.storeA],
+    );
+    const rows = await usage();
+    const a = rows.find((r) => r.store_id === ids.storeA);
+    expect(a.owner_email).toBe("a@example.test");
+    expect(Number(a.storage_files) - Number(before.storage_files)).toBe(2);
+    expect(Number(a.storage_bytes) - Number(before.storage_bytes)).toBe(2000);
+    expect(Number(a.product_photos)).toBeGreaterThanOrEqual(0);
+    expect(rows.find((r) => r.store_id === ids.storeB)?.owner_email).toBe("b@example.test");
+  });
+
+  it("admin_store_usage: un vendedor recibe 'No autorizado' y anon no tiene permiso", async () => {
+    await expect(as(db, B(), () => db.query(`select public.admin_store_usage()`))).rejects.toThrow(/No autorizado/);
+    expect((await errorAs(db, ANON, `select public.admin_store_usage()`))?.code).toBe("42501");
+  });
+
   it("el admin puede suspender y destacar", async () => {
     const n = await as(
       db,

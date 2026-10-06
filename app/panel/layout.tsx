@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ExternalLink, LogOut } from "lucide-react";
+import { ExternalLink, LogOut, UserRound } from "lucide-react";
 import { PanelNav } from "@/components/panel/panel-nav";
-import { BrandMark } from "@/components/site-header";
+import { BrandLink } from "@/components/site-header";
 import { StatusBadge, STORE_STATUS } from "@/components/ui/badge";
-import { buttonClass } from "@/components/ui/button";
 import { signOut } from "@/lib/actions/auth";
 import { requireUser } from "@/lib/auth";
 
@@ -16,34 +15,39 @@ export default async function PanelLayout({ children }: LayoutProps<"/panel">) {
   const status = store ? STORE_STATUS[store.status] : null;
   return (
     <>
-      <header className="border-b border-border bg-bg">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-2">
-          <Link href="/panel" className="flex min-h-11 items-center gap-2 font-display font-black">
-            <BrandMark />
-            <span className="max-w-[12rem] truncate">{store?.name ?? "Mi panel"}</span>
-          </Link>
-          <div className="flex items-center gap-1">
+      <header className="px-3 pt-3 sm:px-4">
+        <div className="mt-nav mx-auto max-w-6xl">
+          <BrandLink label={store?.name ?? "Mi panel"} href="/panel" />
+          <div className="flex shrink-0 items-center gap-0.5">
             {status && (
-              <StatusBadge tone={status.tone} className="hidden sm:inline-flex">
+              <StatusBadge tone={status.tone} className="mr-1 hidden lg:inline-flex">
                 {status.label}
               </StatusBadge>
             )}
             {store && (
-              <Link href={`/${store.slug}`} className={buttonClass("ghost", "sm")} target="_blank">
+              <Link href={`/${store.slug}`} className="mt-nav__link gap-1.5" target="_blank">
                 <ExternalLink aria-hidden="true" className="size-4" />
-                Ver tienda<span className="sr-only"> (abre en otra pestaña)</span>
+                <span className="sr-only sm:not-sr-only">Ver tienda</span>
+                <span className="sr-only"> (abre en otra pestaña)</span>
+              </Link>
+            )}
+            {/* Sin tienda (o admin) no hay menú del panel: la cuenta se abre desde aquí. */}
+            {!store && (
+              <Link href="/panel/cuenta" className="mt-nav__link gap-1.5">
+                <UserRound aria-hidden="true" className="size-4" />
+                Cuenta
               </Link>
             )}
             <form action={signOut}>
-              <button type="submit" className={buttonClass("ghost", "sm")}>
+              <button type="submit" className="mt-nav__link gap-1.5">
                 <LogOut aria-hidden="true" className="size-4" />
-                Salir
+                <span className="sr-only sm:not-sr-only">Salir</span>
               </button>
             </form>
           </div>
         </div>
       </header>
-      <div className="mx-auto flex w-full max-w-6xl flex-1 gap-8 px-4 pb-24 pt-6 md:pb-10">
+      <div className="mx-auto flex w-full max-w-6xl flex-1 px-4 pb-28 pt-6 md:gap-8 md:pb-10">
         {store && (
           <aside className="md:w-52 md:shrink-0">
             <PanelNav />
@@ -51,7 +55,7 @@ export default async function PanelLayout({ children }: LayoutProps<"/panel">) {
         )}
         <main id="contenido" className="min-w-0 flex-1">
           {store?.status === "pendiente" && (
-            <div className="mb-6 rounded-lg border border-border bg-status-warn-bg p-4 text-status-warn" role="note">
+            <div className="mb-6 rounded-2xl border border-border bg-status-warn-bg p-4 text-status-warn" role="note">
               <p className="font-bold">Tu tienda está en revisión.</p>
               <p className="text-fg">
                 Cuando el administrador la apruebe será pública. Mientras tanto puedes subir productos y ver la vista
@@ -60,7 +64,7 @@ export default async function PanelLayout({ children }: LayoutProps<"/panel">) {
             </div>
           )}
           {store?.status === "suspendida" && (
-            <div className="mb-6 rounded-lg bg-status-bad-bg p-4 text-status-bad" role="note">
+            <div className="mb-6 rounded-2xl bg-status-bad-bg p-4 text-status-bad" role="note">
               <p className="font-bold">Tu tienda está suspendida y no es visible para los clientes.</p>
             </div>
           )}

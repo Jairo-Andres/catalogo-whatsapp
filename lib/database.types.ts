@@ -226,6 +226,11 @@ isOneToOne: true
               "city": string,"created_at": string,"featured": boolean,"id": string,"name": string,"products": number,"slug": string,"status": Database["public"]['Enums']["store_status"],"visits_30d": number
             }[]
                            },
+"admin_store_usage":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "name": string,"owner_email": string | null,"product_photos": number,"slug": string,"storage_bytes": number,"storage_files": number,"store_id": string
+            }[]
+                           },
 "mark_product_sold":
 { Args: { "p_product_id": string,"p_quantity"?: number }; Returns: undefined
                            },

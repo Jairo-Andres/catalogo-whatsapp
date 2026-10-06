@@ -2,6 +2,8 @@
 /* Identidad "Rutas + Cota" sin modificar (copias de identidad-visual/fase-2). */
 @import "./tokens.css";
 @import "./components.css" layer(components);
+/* Capa visual de MiTiendaW (hero, figuras 3D, tarjetas, botones con relieve). */
+@import "./mitiendaw.css";
 
 /*
  * Tailwind lee los nombres de los tokens. Los valores de aquí son solo de respaldo:

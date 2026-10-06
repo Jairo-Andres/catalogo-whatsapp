@@ -1,5 +1,5 @@
-/** Datos generales del sitio. El nombre comercial es provisional (decisión pendiente 1). */
-export const SITE_NAME = "Catálogo WhatsApp";
+/** Datos generales del sitio. Nombre comercial: MiTiendaW. */
+export const SITE_NAME = "MiTiendaW";
 export const SITE_TAGLINE = "Crea tu catálogo y recibe pedidos por WhatsApp en minutos";
 export const AUTHOR_NAME = "Jairo Sierra";
 export const AUTHOR_LINKEDIN = "https://www.linkedin.com/in/jairo-andres31-analyst";

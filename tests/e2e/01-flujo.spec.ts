@@ -1,6 +1,6 @@
 import path from "node:path";
 import { expect, test } from "@playwright/test";
-import { login, register, saveState, sql } from "./helpers";
+import { login, PASSWORD, register, saveState, sql } from "./helpers";
 
 /**
  * Recorrido completo del MVP (criterios de la sección 18 del documento):
@@ -142,9 +142,13 @@ test("la tienda pendiente no es pública; el admin la aprueba", async ({ page, b
     admin,
   ]);
   await page.goto("/admin/tiendas");
-  const card = page.getByRole("listitem").filter({ hasText: storeName });
+  // En escritorio la lista de tiendas es una tabla (en celular, tarjetas).
+  const card = page.getByRole("row").filter({ hasText: storeName });
   await card.getByRole("button", { name: `Aprobar ${storeName}` }).click();
   await expect(card.getByText("Activa")).toBeVisible();
+  // Uso por tienda: correo del vendedor y espacio frente al 1 GB del plan gratis.
+  await expect(card.getByText(seller)).toBeVisible();
+  await expect(page.getByRole("meter", { name: "Espacio usado en Storage" })).toBeVisible();
   await page.goto("/admin");
   await expect(page.getByText("Tiendas activas")).toBeVisible();
 });
@@ -166,7 +170,7 @@ test("el cliente ve la tienda, arma el carrito y pide por WhatsApp", async ({ br
   await torta.getByRole("button", { name: /Agregar/ }).click();
   await torta.getByRole("button", { name: /Agregar/ }).click();
   await expect(page.getByText("2 productos")).toBeVisible();
-  await page.getByRole("button", { name: "Ver pedido" }).click();
+  await page.getByRole("button", { name: "Pedir por WhatsApp" }).click();
   const dialog = page.getByRole("dialog", { name: "Tu pedido" });
   await dialog.getByLabel(/Tu nombre/).fill("Ana");
   await dialog.getByRole("radio", { name: "Domicilio" }).check();
@@ -194,12 +198,16 @@ test("el cliente ve la tienda, arma el carrito y pide por WhatsApp", async ({ br
   await page.goto(`/${slug}/${productId}`);
   await expect(page.getByRole("heading", { level: 1, name: "Torta de chocolate" })).toBeVisible();
 
-  // Carrusel de 3 fotos: flechas, puntos y deslizar (scroll horizontal).
+  // Carrusel de 3 fotos: sin flechas encima de la foto; puntos, teclado y deslizar.
   const gallery = page.getByRole("region", { name: "Fotos de Torta de chocolate" });
   await expect(gallery.getByRole("img")).toHaveCount(3);
   await expect(gallery.getByRole("button", { name: "Ver foto 1 de 3" })).toHaveAttribute("aria-current", "true");
-  await gallery.getByRole("button", { name: "Foto siguiente" }).click();
+  await expect(gallery.getByRole("button", { name: /Foto (anterior|siguiente)/ })).toHaveCount(0);
+  await gallery.getByRole("button", { name: "Ver foto 2 de 3" }).click();
   await expect(gallery.getByRole("button", { name: "Ver foto 2 de 3" })).toHaveAttribute("aria-current", "true");
+  await gallery.getByRole("list").focus();
+  await page.keyboard.press("ArrowLeft");
+  await expect(gallery.getByRole("button", { name: "Ver foto 1 de 3" })).toHaveAttribute("aria-current", "true");
   await gallery.getByRole("list").evaluate((el) => el.scrollTo({ left: el.clientWidth * 2 }));
   await expect(gallery.getByRole("button", { name: "Ver foto 3 de 3" })).toHaveAttribute("aria-current", "true");
 
@@ -297,4 +305,47 @@ test("otro vendedor no puede abrir ni editar productos ajenos", async ({ page })
   const res = await page.goto(`/panel/productos/${productId}`);
   expect(res?.status()).toBe(404);
   saveState({ slug, productId, seller, admin, other });
+});
+
+test("mi cuenta: cambiar la contraseña (y volver a la original) y pedir cambio de correo", async ({ page }) => {
+  await login(page, other, "/panel/cuenta");
+  await expect(page.getByRole("heading", { level: 1, name: "Mi cuenta" })).toBeVisible();
+  await expect(page.getByText(other)).toBeVisible();
+
+  const changePassword = async (current: string, next: string) => {
+    await page.getByLabel("Contraseña actual").fill(current);
+    await page.getByLabel("Contraseña nueva", { exact: true }).fill(next);
+    await page.getByLabel("Repite la contraseña nueva").fill(next);
+    await page.getByRole("button", { name: "Cambiar contraseña" }).click();
+  };
+
+  // Clave actual equivocada: error en el campo y no cambia nada.
+  await changePassword("no-es-esta-123", "Otra-clave-segura-456");
+  await expect(page.getByText("La contraseña actual no es correcta")).toBeVisible();
+
+  // No coinciden.
+  await page.getByLabel("Contraseña actual").fill(PASSWORD);
+  await page.getByLabel("Contraseña nueva", { exact: true }).fill("Otra-clave-segura-456");
+  await page.getByLabel("Repite la contraseña nueva").fill("Distinta-789");
+  await page.getByRole("button", { name: "Cambiar contraseña" }).click();
+  await expect(page.getByText("Las contraseñas no coinciden")).toBeVisible();
+
+  // Mostrar contraseñas cambia el tipo de los campos.
+  await page.getByRole("button", { name: "Mostrar contraseñas" }).click();
+  await expect(page.getByLabel("Contraseña nueva", { exact: true })).toHaveAttribute("type", "text");
+  await page.getByRole("button", { name: "Ocultar contraseñas" }).click();
+
+  await changePassword(PASSWORD, "Otra-clave-segura-456");
+  await expect(page.getByText("tu contraseña quedó cambiada")).toBeVisible();
+  // Volver a la original para no afectar a 02-accesibilidad.
+  await changePassword("Otra-clave-segura-456", PASSWORD);
+  await expect(page.getByText("tu contraseña quedó cambiada")).toBeVisible();
+
+  // Correo: el mismo de siempre se rechaza; uno nuevo pide confirmación.
+  await page.getByLabel("Correo nuevo").fill(other);
+  await page.getByRole("button", { name: "Cambiar correo" }).click();
+  await expect(page.getByText("Ese ya es tu correo actual")).toBeVisible();
+  await page.getByLabel("Correo nuevo").fill(`nuevo-${other}`);
+  await page.getByRole("button", { name: "Cambiar correo" }).click();
+  await expect(page.getByText(/Te enviamos un enlace para confirmar el cambio/)).toBeVisible();
 });

@@ -1,117 +1,190 @@
 import Link from "next/link";
-import { BarChart3, Link2, MessageCircle, Smartphone } from "lucide-react";
+import { ArrowRight, Check, Link2, MessageCircleHeart, ShoppingBag, Store } from "lucide-react";
+import { Shape } from "@/components/decor";
 import { PageShell } from "@/components/page-shell";
 import { StoreCard } from "@/components/store/store-card";
 import { ButtonLink, buttonClass } from "@/components/ui/button";
 import { getActiveStores, getCategories } from "@/lib/public-store";
-import { SITE_TAGLINE } from "@/lib/site";
 
 const STEPS = [
   {
-    n: 1,
     title: "Crea tu tienda",
-    text: "Nombre, WhatsApp y ciudad. Tu tienda queda con link propio.",
+    text: "Sube tus productos con una foto y el precio. Tu catálogo queda ordenado en tu propio link.",
+    icon: Store,
+    tile: "mt-icon-tile--b",
   },
   {
-    n: 2,
-    title: "Sube tus productos",
-    text: "Foto desde el celular, precio y descuento. Menos de un minuto cada uno.",
-  },
-  {
-    n: 3,
-    title: "Recibe pedidos por WhatsApp",
-    text: "Tu cliente arma el carrito y te llega el mensaje con el pedido listo.",
-  },
-];
-
-const BENEFITS = [
-  {
-    icon: MessageCircle,
-    title: "Sin pasarela de pagos",
-    text: "Cobras como ya lo haces. Sin comisiones.",
-  },
-  {
+    title: "Comparte tu link",
+    text: "Pásalo por WhatsApp, Instagram o donde hables con tus clientes.",
     icon: Link2,
-    title: "Link propio",
-    text: "Compártelo en tu estado, Instagram o con un QR.",
+    tile: "mt-icon-tile--d",
   },
   {
-    icon: BarChart3,
-    title: "Estadísticas simples",
-    text: "Visitas, clics en Pedir y lo que vendiste en el mes.",
-  },
-  {
-    icon: Smartphone,
-    title: "Hecho para el celular",
-    text: "Tú y tus clientes lo usan desde el teléfono.",
+    title: "Recibe el pedido armado",
+    text: "Tus clientes eligen y el pedido te llega a WhatsApp con productos, cantidades y total.",
+    icon: MessageCircleHeart,
+    tile: "mt-icon-tile--q",
   },
 ];
 
-/** Cómo le llega el pedido al vendedor (datos de ejemplo, marcados como tales). */
-function OrderPreview() {
+const CHECKS = ["Gratis para empezar", "Sin comisiones", "Link propio", "Listo en minutos", "Celular y computador"];
+
+/** Celular con una tienda y tarjetas flotantes. Todo son datos de ejemplo y lo dice. */
+function HeroPreview() {
   return (
-    <figure
-      className="ja-card ja-card--raised gap-3 justify-self-center lg:justify-self-end"
-      aria-label="Ejemplo de pedido que llega a WhatsApp"
+    <div
+      role="img"
+      aria-label="Ejemplo: una tienda en el celular, un producto con descuento, un pedido nuevo y las visitas del día"
+      className="relative mx-auto h-[25rem] w-full max-w-[26rem] sm:h-[28rem]"
     >
-      <figcaption className="flex items-center justify-between gap-2">
-        <span className="ja-label">Así te llega el pedido</span>
-        <span className="ja-tag-example">Ejemplo</span>
-      </figcaption>
-      <div className="max-w-xs rounded-lg rounded-tr-sm bg-status-good-bg p-4 text-sm leading-relaxed text-fg">
-        <p>
-          Hola, quiero hacer un pedido en <strong>Dulces Marta</strong> 🛍️
-        </p>
-        <p className="mt-2 font-bold">Pedido:</p>
-        <p className="ja-num">• 2 x Torta de chocolate — $ 60.000</p>
-        <p className="ja-num">• 1 x Brownie — $ 8.000</p>
-        <p className="ja-num mt-2 font-bold">Total: $ 68.000</p>
-        <p className="mt-2">
-          <strong>Entrega:</strong> Recoger en tienda
+      <Shape kind="sphere-q" bob="fast" className="right-[24%] -top-2 size-14" />
+      <Shape kind="cube-d" bob="slow" className="right-0 top-2 size-16" />
+      <div className="absolute left-1/2 top-6 -translate-x-1/2">
+        <div className="mt-phone">
+          <div className="mt-phone__screen">
+            <div className="h-16 rounded-xl bg-[conic-gradient(from_200deg_at_70%_100%,#f58a2b,#e2407f,#f7f1e8_60%)]" />
+            <p className="font-display text-sm font-black leading-tight">Repostería Demo</p>
+            <p className="-mt-2 font-mono text-[0.6rem] text-[#5c636b]">Repostería · Bogotá</p>
+            {[
+              ["Torta", "$ 48.000", "bg-[#f9d6e2]"],
+              ["Cupcakes x 6", "$ 36.000", "bg-[#d6e3fb]"],
+            ].map(([n, p, bg]) => (
+              <div key={n} className="grid gap-1 rounded-xl bg-[#fff] p-1.5 shadow-sm">
+                <div className={`h-10 rounded-lg ${bg}`} />
+                <p className="text-[0.65rem] font-bold leading-none">{n}</p>
+                <p className="font-mono text-[0.6rem] leading-none">{p}</p>
+                <div className="h-2.5 rounded-full bg-[#1959d1]" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="absolute left-0 top-10 hidden rotate-[-4deg] rounded-2xl sm:block bg-[#fff] p-3 pr-4 text-[#1a1d21] shadow-lg">
+        <span className="ja-tag-example mt-example">Ejemplo</span>
+        <p className="text-xs font-bold">Torta de chocolate</p>
+        <p className="flex items-center gap-1.5 font-mono text-sm font-bold">
+          $ 48.000 <span className="tag-discount rounded-full">-20%</span>
         </p>
       </div>
-    </figure>
+      <div className="absolute right-0 top-[45%] w-48 rotate-[3deg] rounded-2xl bg-[var(--mt-mint)] p-3 text-[var(--mt-on-mint)] shadow-lg">
+        <span className="ja-tag-example mt-example">Ejemplo</span>
+        <p className="flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-wide">
+          <span className="size-2 rounded-full bg-current" /> Nuevo pedido
+        </p>
+        <p className="mt-1 text-xs">• 2 x Torta de chocolate</p>
+        <p className="text-xs">• 1 x Cupcakes x 6</p>
+        <p className="mt-1 text-xs font-bold">Total: $ 132.000 · Domicilio</p>
+      </div>
+      <div className="absolute bottom-0 right-4 hidden rotate-[-3deg] sm:flex items-center gap-2 rounded-2xl bg-[#fff] px-3 py-2 text-[#1a1d21] shadow-lg">
+        <span className="ja-tag-example mt-example">Ejemplo</span>
+        <span className="font-mono text-2xl font-bold">38</span>
+        <span className="text-[0.65rem] leading-tight text-[#5c636b]">
+          visitas
+          <br />
+          hoy
+        </span>
+        <svg viewBox="0 0 48 20" className="h-5 w-12" aria-hidden="true">
+          <path d="M1 17 L12 11 L20 14 L32 5 L47 2" fill="none" stroke="#1959d1" strokeWidth="2.5" />
+        </svg>
+      </div>
+      <span
+        aria-hidden="true"
+        className="mt-icon-tile mt-icon-tile--b absolute bottom-10 left-2 size-20 rotate-[-8deg] rounded-3xl"
+      >
+        <ShoppingBag className="size-9" />
+      </span>
+    </div>
   );
 }
 
 export default async function HomePage({ searchParams }: PageProps<"/">) {
   const category = String((await searchParams).categoria ?? "") || undefined;
   const [stores, categories] = await Promise.all([getActiveStores({ category, limit: 12 }), getCategories()]);
+  const demo = stores[0]?.slug;
 
   return (
     <PageShell>
-      <section className="ja-topo border-b border-border">
-        <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-4 py-14 sm:py-20 lg:grid-cols-[1fr_22rem]">
-          <div className="grid gap-6">
-            <div className="route-line w-24" aria-hidden="true" />
-            <h1 className="ja-display max-w-3xl text-[length:var(--text-display)]">{SITE_TAGLINE}</h1>
-            <p className="max-w-2xl text-lg text-fg-muted">
-              Un catálogo ordenado con tu propio link. Tus clientes eligen, y el pedido te llega armado a WhatsApp.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <ButtonLink href="/registro" size="lg">
-                Crear mi tienda gratis
-              </ButtonLink>
-              <ButtonLink href="#tiendas" variant="secondary" size="lg">
-                Ver tiendas
-              </ButtonLink>
+      <div className="px-3 pt-4 sm:px-4">
+        <section className="mt-hero mx-auto max-w-[78rem]" aria-labelledby="hero-titulo">
+          <Shape kind="sphere-b" bob="slow" className="bottom-8 left-[46%] hidden size-10 lg:block" />
+          <div className="mx-auto grid max-w-6xl items-center gap-10 px-5 py-12 sm:px-10 sm:py-16 lg:grid-cols-[1.1fr_1fr]">
+            <div className="grid gap-6">
+              <div className="mt-tricolor" aria-hidden="true" />
+              <h1 id="hero-titulo" className="ja-display text-[length:var(--text-display)]">
+                Crea tu catálogo y recibe pedidos por{" "}
+                <span className="mt-underline whitespace-nowrap text-[var(--mt-wa-ink)]">WhatsApp</span>.
+              </h1>
+              <p className="mt-muted max-w-xl text-lg">
+                Sube tus productos con una foto, comparte tu link y recibe el pedido armado: productos, cantidades y
+                total.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <ButtonLink href="/registro" size="lg">
+                  Crear mi tienda gratis <ArrowRight aria-hidden="true" className="size-5" />
+                </ButtonLink>
+                <Link href={demo ? `/${demo}` : "/tiendas"} className={buttonClass("secondary", "lg", "mt-btn-night")}>
+                  Ver una tienda
+                </Link>
+              </div>
+              <ul className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
+                {CHECKS.map((c) => (
+                  <li key={c} className="mt-muted flex items-center gap-1.5">
+                    <Check aria-hidden="true" className="size-4 text-[var(--mt-wa-ink)]" />
+                    {c}
+                  </li>
+                ))}
+              </ul>
             </div>
+            <HeroPreview />
           </div>
-          <OrderPreview />
-        </div>
+        </section>
+      </div>
+
+      <section
+        id="como-funciona"
+        aria-labelledby="como-titulo"
+        className="mx-auto max-w-6xl scroll-mt-4 px-4 pb-6 pt-16"
+      >
+        <p className="ja-label">Cómo funciona</p>
+        <h2 id="como-titulo" className="ja-display mb-8 mt-2 max-w-xl text-3xl sm:text-4xl">
+          De tus productos al pedido, en tres pasos
+        </h2>
+        <ol className="grid gap-5 md:grid-cols-3">
+          {STEPS.map(({ title, text, icon: Icon, tile }, i) => (
+            <li key={title} className="mt-card grid content-start gap-3">
+              <div className="flex items-start justify-between">
+                <span className={`mt-icon-tile ${tile}`} aria-hidden="true">
+                  <Icon className="size-5" />
+                </span>
+                <span className="font-mono text-lg font-bold text-fg-muted" aria-hidden="true">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+              </div>
+              <h3 className="font-display text-xl font-black">
+                <span className="sr-only">Paso {i + 1}: </span>
+                {title}
+              </h3>
+              <p className="text-fg-muted">{text}</p>
+            </li>
+          ))}
+        </ol>
       </section>
 
       <section id="tiendas" aria-labelledby="tiendas-titulo" className="mx-auto max-w-6xl scroll-mt-4 px-4 py-12">
-        <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-          <h2 id="tiendas-titulo" className="ja-display text-3xl">
+        <p className="ja-label">Tiendas</p>
+        <div className="mb-6 mt-2 flex flex-wrap items-end justify-between gap-3">
+          <h2 id="tiendas-titulo" className="ja-display text-3xl sm:text-4xl">
             Tiendas activas
           </h2>
-          <Link href="/tiendas" className="font-bold text-ink-b underline underline-offset-4">
+          <Link
+            href="/tiendas"
+            className="inline-flex min-h-11 items-center font-bold text-ink-b underline-offset-4 hover:underline"
+          >
             Ver todas
           </Link>
         </div>
-        <nav aria-label="Filtrar por categoría" className="-mx-4 mb-6 overflow-x-auto px-4">
-          <ul className="flex gap-2 pb-1">
+        <nav aria-label="Filtrar por categoría" className="mb-6">
+          <ul className="flex flex-wrap gap-2">
             <li>
               <Link
                 href="/#tiendas"
@@ -135,14 +208,14 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
           </ul>
         </nav>
         {stores.length === 0 ? (
-          <div className="ja-card">
+          <div className="mt-card grid gap-1">
             <p className="font-bold">
               {category ? "Todavía no hay tiendas en esta categoría." : "Todavía no hay tiendas publicadas."}
             </p>
             <p className="text-fg-muted">¿Vendes por WhatsApp? La tuya puede ser la primera.</p>
           </div>
         ) : (
-          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {stores.map((s, i) => (
               <StoreCard key={s.slug} store={s} index={i} />
             ))}
@@ -150,50 +223,17 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
         )}
       </section>
 
-      <section aria-labelledby="como-titulo" className="border-y border-border bg-surface">
-        <div className="mx-auto max-w-6xl px-4 py-12">
-          <h2 id="como-titulo" className="ja-display mb-6 text-3xl">
-            Cómo funciona
-          </h2>
-          <ol className="grid gap-4 md:grid-cols-3">
-            {STEPS.map((s) => (
-              <li key={s.n} className="ja-card ja-card--raised">
-                <p className="ja-card__sign">
-                  <span className="ja-bullet ja-bullet--b" aria-hidden="true">
-                    {s.n}
-                  </span>
-                  <span>
-                    <span className="sr-only">Paso {s.n}: </span>
-                    {s.title}
-                  </span>
-                </p>
-                <p className="text-fg-muted">{s.text}</p>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
-
-      <section aria-labelledby="ventajas-titulo" className="mx-auto max-w-6xl px-4 py-12">
-        <h2 id="ventajas-titulo" className="ja-display mb-6 text-3xl">
-          Ventajas
-        </h2>
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {BENEFITS.map(({ icon: Icon, title, text }) => (
-            <li key={title} className="ja-card">
-              <Icon aria-hidden="true" className="size-7 text-ink-b" />
-              <p className="font-bold">{title}</p>
-              <p className="text-fg-muted">{text}</p>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="border-t border-border bg-fg text-bg">
-        <div className="mx-auto grid max-w-6xl justify-items-start gap-4 px-4 py-12">
-          <h2 className="ja-display text-3xl">Tu catálogo listo hoy</h2>
-          <p className="max-w-xl opacity-90">Es gratis. Solo necesitas un correo y tu número de WhatsApp.</p>
-          <Link href="/registro" className="ja-btn ja-btn--lg bg-bg text-fg hover:opacity-90">
+      <section className="px-4 pb-14">
+        <div className="mt-cta mx-auto grid max-w-6xl items-center gap-6 px-6 py-10 sm:px-12 md:grid-cols-[1fr_auto]">
+          <Shape kind="sphere-d" className="-right-8 -top-10 hidden size-36 md:block" />
+          <Shape kind="cube-q" className="-bottom-8 left-[45%] size-20" />
+          <div className="grid gap-2">
+            <h2 className="ja-display text-3xl sm:text-4xl">Abre tu tienda en minutos</h2>
+            <p className="max-w-xl text-[#fff]/90">
+              Sube tus productos, comparte tu link y empieza a recibir pedidos armados en WhatsApp.
+            </p>
+          </div>
+          <Link href="/registro" className={buttonClass("primary", "lg", "mt-btn-yellow justify-self-start")}>
             Crear mi tienda gratis
           </Link>
         </div>

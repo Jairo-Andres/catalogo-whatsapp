@@ -1,0 +1,476 @@
+/* ==========================================================================
+   MiTiendaW · capa visual sobre "Rutas + Cota" (tokens.css no se modifica).
+   Hero nocturno con brillos y curvas de nivel, figuras 3D solo con CSS,
+   tarjetas redondeadas con fondos pastel y botones con relieve.
+   Todo color nuevo es un token con su versión oscura.
+   ========================================================================== */
+
+:root {
+  --mt-night: #10131f;
+  --mt-night-2: #1a1f33;
+  --mt-on-night: #f2f3f5;
+  --mt-on-night-muted: #c3c8d4;
+  --mt-chip-border: rgb(255 255 255 / 0.22);
+  --mt-wa-ink: #4ade80; /* "WhatsApp" en el titular, sobre fondo nocturno (9:1) */
+
+  --mt-tile-1: #f9d6e2; /* rosa */
+  --mt-tile-2: #d6e3fb; /* azul */
+  --mt-tile-3: #fbe9c4; /* amarillo */
+  --mt-tile-4: #dcefd8; /* verde */
+  --mt-tile-5: #fbdfcf; /* durazno */
+  --mt-tile-6: #d3eee8; /* menta */
+  --mt-tile-off: #dcdde2; /* no disponible */
+  --mt-beige: #f1e8dc;
+  --mt-mint: #dcf3e6;
+  --mt-on-mint: #0f5132;
+
+  --mt-card-bg: var(--color-bg);
+  --mt-card-edge: var(--color-border);
+  --mt-card-shadow: 0 2px 0 var(--mt-card-edge), 0 18px 36px -24px rgb(16 19 31 / 0.45);
+
+  /* Botones con relieve: borde inferior más oscuro que se hunde al presionar */
+  --mt-press: inset 0 -4px 0 rgb(0 0 0 / 0.28);
+  --mt-press-down: inset 0 -1px 0 rgb(0 0 0 / 0.28);
+  --mt-yellow: #f2b705;
+  --mt-on-yellow: #1a1d21;
+
+  --radius-xl: 18px;
+  --radius-2xl: 24px;
+  --radius-hero: clamp(24px, 4vw, 40px);
+
+  --mt-waves: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='160'%3E%3Cpath d='M0 20C80 6 240 34 320 20M0 52C80 34 240 70 320 52M0 84C80 70 240 98 320 84M0 116C80 96 240 136 320 116M0 148C80 136 240 160 320 148' fill='none' stroke='%23ffffff' stroke-opacity='.06' stroke-width='1.2'/%3E%3C/svg%3E");
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --mt-night: #0b0d16;
+    --mt-night-2: #141829;
+    --mt-tile-1: #3d2430;
+    --mt-tile-2: #1f2a44;
+    --mt-tile-3: #3a3020;
+    --mt-tile-4: #20331f;
+    --mt-tile-5: #3d2a20;
+    --mt-tile-6: #1b3530;
+    --mt-tile-off: #2a2d33;
+    --mt-beige: #2c2620;
+    --mt-mint: #143024;
+    --mt-on-mint: #b7f0cf;
+    --mt-card-bg: var(--color-surface);
+    --mt-card-shadow: 0 2px 0 var(--color-border), 0 18px 36px -24px rgb(0 0 0 / 0.8);
+  }
+}
+:root[data-theme="dark"] {
+  --mt-night: #0b0d16;
+  --mt-night-2: #141829;
+  --mt-tile-1: #3d2430;
+  --mt-tile-2: #1f2a44;
+  --mt-tile-3: #3a3020;
+  --mt-tile-4: #20331f;
+  --mt-tile-5: #3d2a20;
+  --mt-tile-6: #1b3530;
+  --mt-tile-off: #2a2d33;
+  --mt-beige: #2c2620;
+  --mt-mint: #143024;
+  --mt-on-mint: #b7f0cf;
+  --mt-card-bg: var(--color-surface);
+  --mt-card-shadow: 0 2px 0 var(--color-border), 0 18px 36px -24px rgb(0 0 0 / 0.8);
+}
+
+@layer components {
+  /* ---- Botones con relieve (sobre .ja-btn de la marca) ---- */
+  .ja-btn {
+    border-radius: var(--radius-xl);
+  }
+  .ja-btn--primary,
+  .ja-btn--wa,
+  .mt-btn-dark,
+  .mt-btn-yellow {
+    box-shadow: var(--mt-press);
+    padding-bottom: 3px;
+  }
+  .ja-btn--primary:active,
+  .ja-btn--wa:active,
+  .mt-btn-dark:active,
+  .mt-btn-yellow:active {
+    transform: translateY(2px);
+    box-shadow: var(--mt-press-down);
+  }
+  .ja-btn--secondary {
+    box-shadow: inset 0 -3px 0 var(--color-border);
+  }
+  .ja-btn--secondary:active {
+    transform: translateY(2px);
+    box-shadow: none;
+  }
+  .ja-btn:disabled,
+  .ja-btn[aria-disabled="true"] {
+    box-shadow: inset 0 -3px 0 var(--color-border);
+  }
+  .mt-btn-dark {
+    background: var(--color-fg);
+    color: var(--color-bg);
+  }
+  .mt-btn-dark:hover {
+    background: var(--color-fg);
+    opacity: 0.88;
+  }
+  /* Botón oscuro dentro del hero (siempre nocturno): borde claro para separarlo */
+  .mt-btn-night {
+    background: rgb(255 255 255 / 0.08);
+    color: var(--mt-on-night);
+    border-color: var(--mt-chip-border);
+  }
+  .mt-btn-night:hover,
+  .ja-btn--primary.mt-btn-night:hover {
+    background: rgb(255 255 255 / 0.16);
+  }
+  .mt-btn-yellow {
+    background: var(--mt-yellow);
+    color: var(--mt-on-yellow);
+  }
+  .mt-btn-yellow:hover {
+    background: var(--mt-yellow);
+    filter: brightness(1.06);
+  }
+  .mt-pill {
+    border-radius: var(--radius-pill);
+  }
+
+  /* ---- Cabecera flotante en píldora ---- */
+  .mt-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    min-width: 0;
+    padding: 0.375rem 0.375rem 0.375rem 0.75rem;
+    background: color-mix(in srgb, var(--color-bg) 92%, transparent);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    box-shadow: var(--mt-card-shadow);
+    backdrop-filter: blur(10px);
+  }
+  .mt-nav__link {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--tap-min);
+    padding-inline: var(--space-3);
+    border-radius: var(--radius-pill);
+    font-weight: var(--weight-bold);
+    font-size: var(--text-sm);
+    white-space: nowrap;
+    color: var(--color-fg);
+  }
+  .mt-nav__link:hover {
+    background: var(--color-surface-2);
+  }
+  .mt-nav__link[aria-current="page"] {
+    color: var(--ink-b);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 6px;
+  }
+
+  /* ---- Hero nocturno ---- */
+  .mt-hero {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border-radius: var(--radius-hero);
+    color: var(--mt-on-night);
+    background:
+      radial-gradient(38rem 24rem at 72% 0%, rgb(37 99 235 / 0.35), transparent 70%),
+      radial-gradient(28rem 20rem at 98% 92%, rgb(242 183 5 / 0.22), transparent 70%),
+      radial-gradient(26rem 18rem at 55% 105%, rgb(194 24 91 / 0.28), transparent 70%),
+      radial-gradient(30rem 22rem at 0% 100%, rgb(99 72 199 / 0.2), transparent 70%),
+      var(--mt-waves) 0 0 / 320px 160px,
+      linear-gradient(160deg, var(--mt-night-2), var(--mt-night));
+  }
+  .mt-hero :focus-visible {
+    outline-color: #9ec0ff;
+  }
+  .mt-hero .mt-muted {
+    color: var(--mt-on-night-muted);
+  }
+  .mt-hero .ja-label {
+    color: var(--mt-on-night-muted);
+  }
+  .mt-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    padding: 0.35em 0.8em;
+    border: 1px solid var(--mt-chip-border);
+    border-radius: var(--radius-pill);
+    background: rgb(255 255 255 / 0.06);
+    font: var(--weight-bold) var(--text-xs) / 1.2 var(--font-mono);
+    color: var(--mt-on-night);
+  }
+
+  /* Barrita y subrayado de tres colores (B, D, Q) */
+  .mt-tricolor {
+    height: 6px;
+    width: 5rem;
+    border-radius: var(--radius-pill);
+    background: linear-gradient(90deg, var(--ja-b) 0 33%, var(--ja-d) 33% 66%, var(--ja-q) 66%);
+  }
+  .mt-underline {
+    background: linear-gradient(90deg, var(--ja-b) 0 33%, var(--ja-d) 33% 66%, var(--ja-q) 66%) 0 100% / 100% 0.12em
+      no-repeat;
+    padding-bottom: 0.06em;
+  }
+
+  /* ---- Figuras 3D (decorativas, solo CSS) ---- */
+  .mt-shape {
+    position: absolute;
+    pointer-events: none;
+    z-index: -1;
+  }
+  .mt-sphere {
+    border-radius: 50%;
+    box-shadow:
+      inset -10px -14px 24px rgb(0 0 0 / 0.35),
+      0 18px 30px -12px rgb(0 0 0 / 0.5);
+  }
+  .mt-sphere--q {
+    background: radial-gradient(circle at 32% 28%, #ffb3cf 0 8%, #e2407f 32%, #a3104a 68%, #5e0729);
+  }
+  .mt-sphere--b {
+    background: radial-gradient(circle at 32% 28%, #b9d2ff 0 8%, #3b7bf0 34%, #1747b5 70%, #0b2668);
+  }
+  .mt-sphere--d {
+    background: radial-gradient(circle at 32% 28%, #fff1b8 0 8%, #f6c933 34%, #d09a00 70%, #7a5900);
+  }
+  .mt-sphere--brown {
+    background: radial-gradient(circle at 32% 28%, #c58a63 0 8%, #8a5130 36%, #5a2f17 72%, #2e160a);
+  }
+  .mt-sphere--teal {
+    background: radial-gradient(circle at 32% 28%, #b5f3e3 0 8%, #2fbf9c 36%, #148069 72%, #08443a);
+  }
+  .mt-sphere--orange {
+    background: radial-gradient(circle at 32% 28%, #ffd2a8 0 8%, #f58a2b 36%, #c25a0c 72%, #6b2f04);
+  }
+  .mt-ring {
+    border-radius: 50%;
+    border: 18px solid #d0175c;
+    box-shadow:
+      inset 0 6px 10px rgb(255 255 255 / 0.25),
+      0 16px 26px -12px rgb(0 0 0 / 0.45);
+  }
+  .mt-cube {
+    border-radius: 22%;
+    box-shadow:
+      inset -8px -10px 16px rgb(0 0 0 / 0.25),
+      inset 6px 6px 12px rgb(255 255 255 / 0.35),
+      0 18px 28px -12px rgb(0 0 0 / 0.45);
+  }
+  .mt-cube--d {
+    background: linear-gradient(145deg, #ffe07a, #f2b705 45%, #b88300);
+    transform: rotate(-14deg) skewY(6deg);
+  }
+  .mt-cube--b {
+    background: linear-gradient(145deg, #8fb5ff, #2f6be6 45%, #1747b5);
+    transform: rotate(10deg);
+  }
+  .mt-cube--q {
+    background: linear-gradient(145deg, #ff9cc2, #e2407f 45%, #a3104a);
+    transform: rotate(-8deg);
+  }
+  .mt-cube--gray {
+    background: linear-gradient(145deg, #f3f4f6, #c9ccd3 50%, #9fa4ad);
+  }
+  .mt-sphere--gray {
+    background: radial-gradient(circle at 32% 28%, #f5f6f8 0 8%, #b8bcc5 36%, #8a8f99 72%, #5b5f68);
+  }
+  @keyframes mt-bob {
+    50% {
+      translate: 0 -8px;
+    }
+  }
+  .mt-bob {
+    animation: mt-bob 6s var(--ease-in-out) infinite;
+  }
+  .mt-bob--slow {
+    animation-duration: 8s;
+    animation-delay: -2s;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mt-bob {
+      animation: none;
+    }
+  }
+
+  /* ---- Tarjetas ---- */
+  /* Las tarjetas de la marca (panel y admin) toman el mismo radio y sombra. */
+  .ja-card,
+  .ja-kpi {
+    border-radius: var(--radius-2xl);
+  }
+  .ja-card--raised {
+    background: var(--mt-card-bg);
+    box-shadow: var(--mt-card-shadow);
+  }
+  .ja-table-wrap {
+    border-radius: var(--radius-xl);
+  }
+  .mt-card {
+    min-width: 0;
+    padding: var(--space-5);
+    background: var(--mt-card-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--mt-card-shadow);
+  }
+  .mt-icon-tile {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 0.875rem;
+    color: #fff;
+    box-shadow:
+      inset 0 -4px 0 rgb(0 0 0 / 0.2),
+      inset 0 3px 6px rgb(255 255 255 / 0.3);
+  }
+  .mt-icon-tile--b {
+    background: linear-gradient(160deg, #5b8ff5, #1959d1);
+  }
+  .mt-icon-tile--d {
+    background: linear-gradient(160deg, #ffd34d, #f2b705);
+    color: #1a1d21;
+  }
+  .mt-icon-tile--q {
+    background: linear-gradient(160deg, #f0609c, #c2185b);
+  }
+  .mt-icon-tile--good {
+    background: linear-gradient(160deg, #3fb950, #1a7f37);
+  }
+
+  /* Fondo pastel de las fotos y tarjetas */
+  .mt-tile-1 {
+    background: var(--mt-tile-1);
+  }
+  .mt-tile-2 {
+    background: var(--mt-tile-2);
+  }
+  .mt-tile-3 {
+    background: var(--mt-tile-3);
+  }
+  .mt-tile-4 {
+    background: var(--mt-tile-4);
+  }
+  .mt-tile-5 {
+    background: var(--mt-tile-5);
+  }
+  .mt-tile-6 {
+    background: var(--mt-tile-6);
+  }
+  .mt-tile-off {
+    background: var(--mt-tile-off);
+  }
+  .mt-beige {
+    background: var(--mt-beige);
+  }
+
+  .mt-price {
+    font: var(--weight-bold) var(--text-lg) / 1.2 var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* Insignias oscuras de estado sobre la foto: forma + texto + color */
+  .mt-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    padding: 0.3em 0.7em;
+    border-radius: var(--radius-pill);
+    background: #16181f;
+    font: var(--weight-bold) var(--text-xs) / 1.1 var(--font-body);
+    white-space: nowrap;
+  }
+  .mt-badge::before {
+    content: "";
+    width: 0.75em;
+    height: 0.75em;
+    background: currentColor;
+  }
+  .mt-badge--warn {
+    color: #f6c933;
+  }
+  .mt-badge--warn::before {
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  }
+  .mt-badge--bad {
+    color: #ff8cb8;
+  }
+  .mt-badge--bad::before {
+    border-radius: 2px;
+  }
+  .mt-badge--good {
+    color: #6ee38a;
+  }
+  .mt-badge--good::before {
+    border-radius: 50%;
+  }
+
+  /* Etiqueta "EJEMPLO" en las tarjetas de muestra del hero */
+  .mt-example {
+    position: absolute;
+    top: -0.6rem;
+    right: 0.75rem;
+    background: var(--color-bg);
+  }
+
+  /* Barra del pedido */
+  .mt-cartbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    border-radius: var(--radius-2xl);
+    background: var(--mt-night);
+    color: var(--mt-on-night);
+    box-shadow:
+      inset 0 -4px 0 rgb(0 0 0 / 0.4),
+      0 20px 40px -16px rgb(16 19 31 / 0.6);
+  }
+  .mt-cartbar .ja-label {
+    color: var(--mt-on-night-muted);
+  }
+
+  /* Franja de llamado a la acción */
+  .mt-cta {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border-radius: var(--radius-hero);
+    background: linear-gradient(135deg, #1959d1, #1447a8);
+    color: #fff;
+    box-shadow: inset 0 -5px 0 rgb(0 0 0 / 0.2);
+  }
+
+  /* Celular de ejemplo en el hero */
+  .mt-phone {
+    position: relative;
+    width: 15rem;
+    padding: 0.6rem;
+    border-radius: 2.4rem;
+    background: #0a0b10;
+    box-shadow:
+      0 0 0 2px #2a2e3b,
+      0 30px 60px -20px rgb(0 0 0 / 0.7);
+    transform: rotate(6deg);
+  }
+  .mt-phone__screen {
+    display: grid;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    border-radius: 1.9rem;
+    background: #f7f1e8;
+    color: #1a1d21;
+    overflow: hidden;
+  }
+}

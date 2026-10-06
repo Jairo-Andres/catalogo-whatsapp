@@ -14,7 +14,7 @@ export function VisitsChart({
   title: string;
 }) {
   return (
-    <figure className="grid gap-3">
+    <figure className="grid min-w-0 gap-3 overflow-hidden">
       <figcaption className="font-bold">{title}</figcaption>
       <div className="h-56 w-full" aria-hidden="true">
         <ResponsiveContainer width="100%" height="100%">
@@ -92,7 +92,7 @@ export function HBars({
 }) {
   const fmt = (v: number) => (money ? formatCOP(v) : String(v));
   return (
-    <figure className="grid gap-3">
+    <figure className="grid min-w-0 gap-3 overflow-hidden">
       <figcaption className="font-bold">{title}</figcaption>
       <div style={{ height: Math.max(120, data.length * 40) }} aria-hidden="true">
         <ResponsiveContainer width="100%" height="100%">

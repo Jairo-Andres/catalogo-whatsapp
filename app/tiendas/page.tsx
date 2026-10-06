@@ -20,8 +20,11 @@ export default async function TiendasPage({ searchParams }: PageProps<"/tiendas"
   return (
     <PageShell>
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-10">
-        <h1 className="ja-display text-4xl">Tiendas</h1>
-        <form role="search" className="grid gap-3 sm:grid-cols-[1fr_16rem_auto] sm:items-end">
+        <div className="grid gap-2">
+          <p className="ja-label">Tiendas</p>
+          <h1 className="ja-display text-4xl sm:text-5xl">Todas las tiendas</h1>
+        </div>
+        <form role="search" className="mt-card grid gap-3 sm:grid-cols-[1fr_16rem_auto] sm:items-end">
           <div className="grid gap-1.5">
             <label htmlFor="q" className="font-bold">
               Buscar por nombre o ciudad
@@ -45,11 +48,11 @@ export default async function TiendasPage({ searchParams }: PageProps<"/tiendas"
             <Search aria-hidden="true" className="size-5" /> Buscar
           </Button>
         </form>
-        <p role="status" className="text-fg-muted">
+        <p role="status" className="font-mono text-sm text-fg-muted">
           {stores.length} {stores.length === 1 ? "tienda" : "tiendas"}
         </p>
         {stores.length > 0 && (
-          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {stores.map((s, i) => (
               <StoreCard key={s.slug} store={s} index={i} />
             ))}

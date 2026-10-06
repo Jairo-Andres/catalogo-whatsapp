@@ -1,10 +1,10 @@
-# Catálogo WhatsApp
+# MiTiendaW
 
 **ES** · Plataforma donde un emprendimiento crea su catálogo con link propio y recibe los pedidos armados en WhatsApp. El cliente no se registra ni paga en la web. Proyecto de portafolio de [Jairo Sierra](https://www.linkedin.com/in/jairo-andres31-analyst) (full-stack, con criterio de QA y seguridad).
 
 **EN** · A platform where small businesses publish a catalog with their own link and receive ready-made orders on WhatsApp. Customers don't sign up or pay on the site. Portfolio project by [Jairo Sierra](https://www.linkedin.com/in/jairo-andres31-analyst). English summary [below](#english).
 
-> El nombre comercial es provisional (decisión pendiente). Se cambia en `lib/site.ts`.
+> El nombre se cambia en un solo lugar: `lib/site.ts` (y `public/site.webmanifest`).
 
 ---
 
@@ -44,7 +44,7 @@ Todo corre en local y en GitHub Actions (`.github/workflows/ci.yml`).
 | Navegador de punta a punta (registro → tienda → producto con 3 fotos → aprobación → carrito → WhatsApp → venta) | `npm run test:e2e`                                          | 9 pasan                                                         |
 | Accesibilidad axe WCAG 2.2 A/AA en todas las páginas, 390 y 1280 px, claro y oscuro                             | `npm run test:e2e`                                          | 12 recorridos, 0 incumplimientos, sin desborde horizontal       |
 
-Detalles que prueban las pruebas: un vendedor no puede leer ni cambiar tienda, productos, ventas, eventos ni fotos de otro; nadie se vuelve admin desde el navegador; el vendedor no puede aprobar su propia tienda; una visita cuenta una vez cada 30 minutos y el dueño no cuenta; vender más que el stock se rechaza; la foto de 3000×3000 px se sube como WebP de menos de 400 KB; un producto acepta 3 fotos y la base rechaza la cuarta; el carrusel se mueve con flechas, puntos y deslizando; un carrito de 30 productos cabe en el enlace de WhatsApp.
+Detalles que prueban las pruebas: un vendedor no puede leer ni cambiar tienda, productos, ventas, eventos ni fotos de otro; nadie se vuelve admin desde el navegador; el vendedor no puede aprobar su propia tienda; una visita cuenta una vez cada 30 minutos y el dueño no cuenta; vender más que el stock se rechaza; la foto de 3000×3000 px se sube como WebP de menos de 400 KB; un producto acepta 3 fotos y la base rechaza la cuarta; el carrusel se mueve con puntos, teclado y deslizando (sin flechas que tapen la foto); un carrito de 30 productos cabe en el enlace de WhatsApp.
 
 ## Correr en local
 
@@ -93,7 +93,7 @@ Pruebas completas: `npx supabase db reset && npm run test:db` (modo Postgres sim
 
 Valores sugeridos por el documento, a confirmar:
 
-1. **Nombre y dominio**: pendiente; nombre provisional "Catálogo WhatsApp" y dominio de Vercel.
+1. **Nombre y dominio**: MiTiendaW (decidido por Jairo el 6 oct 2026); dominio de Vercel por ahora.
 2. **Aprobación de tiendas**: manual por el admin (las tiendas nacen `pendiente`).
 3. **Límites**: 60 productos por tienda, hasta 3 fotos por producto (pedido de Jairo; el documento sugería 1 en el MVP y 4 en fase 2), fotos de máximo 2 MB en el bucket (la app las comprime a ~300 KB y máximo 1600 px de lado; acepta fotos de cámara de muchos megapíxeles y HEIC).
 4. **Una tienda por vendedor** (restricción `unique` en la base).

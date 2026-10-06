@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
+import { MessageCircle, Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
 import { track } from "@/lib/analytics";
 import { formatCOP } from "@/lib/format";
 import { buildOrderMessage, whatsappLink } from "@/lib/whatsapp";
@@ -87,22 +87,30 @@ export function CartBar({ store, storeUrl, catalog }: Props) {
 
   return (
     <>
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-bg/95 p-3 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-bg/85">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
-          <p className="ja-num">
-            <span className="font-bold">
-              {count} {count === 1 ? "producto" : "productos"}
+      <div className="fixed inset-x-0 bottom-0 z-30 px-3 pb-3">
+        <div className="mt-cartbar mx-auto max-w-6xl">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="mt-icon-tile mt-icon-tile--b hidden min-[400px]:inline-grid" aria-hidden="true">
+              <ShoppingBag className="size-5" />
             </span>
-            <span className="text-fg-muted"> · {formatCOP(total)}</span>
-          </p>
+            <div className="min-w-0">
+              <p className="ja-label">Tu pedido</p>
+              <p className="ja-num whitespace-nowrap font-display font-black sm:text-lg">
+                {count} {count === 1 ? "producto" : "productos"} · {formatCOP(total)}
+              </p>
+            </div>
+          </div>
           <Button
+            variant="wa"
+            className="shrink-0 whitespace-nowrap"
             onClick={() => {
               setSent(false);
               setOpen(true);
             }}
             aria-haspopup="dialog"
           >
-            <ShoppingBag aria-hidden="true" className="size-5" /> Ver pedido
+            <MessageCircle aria-hidden="true" className="size-5" />
+            Pedir<span className="sr-only sm:not-sr-only">&nbsp;por WhatsApp</span>
           </Button>
         </div>
       </div>
@@ -111,7 +119,7 @@ export function CartBar({ store, storeUrl, catalog }: Props) {
         ref={dialogRef}
         aria-labelledby={titleId}
         onClose={() => setOpen(false)}
-        className="m-0 mt-auto max-h-[92dvh] w-full max-w-none rounded-t-lg border border-border bg-bg p-0 text-fg shadow-lg backdrop:bg-black/50 sm:m-auto sm:max-w-lg sm:rounded-lg"
+        className="m-0 mt-auto max-h-[92dvh] w-full max-w-none overflow-y-auto rounded-t-3xl border border-border bg-bg p-0 text-fg shadow-lg backdrop:bg-black/50 sm:m-auto sm:max-w-lg sm:rounded-3xl"
       >
         <div className="grid gap-4 p-5">
           <div className="flex items-center justify-between gap-2">
@@ -175,10 +183,6 @@ export function CartBar({ store, storeUrl, catalog }: Props) {
               </li>
             ))}
           </ul>
-          <p className="ja-num flex justify-between text-lg">
-            <span className="font-bold">Total</span>
-            <strong>{formatCOP(total)}</strong>
-          </p>
 
           <div className="grid gap-1.5">
             <label htmlFor={nameId} className="font-bold">
@@ -223,35 +227,42 @@ export function CartBar({ store, storeUrl, catalog }: Props) {
             />
           </div>
 
-          <p className="text-sm text-fg-muted">El vendedor confirmará disponibilidad y precio final por WhatsApp.</p>
-          {canOrder ? (
-            <a
-              href={href}
-              target="_blank"
-              rel="noopener"
-              onClick={onOrder}
-              className="ja-btn ja-btn--wa ja-btn--lg w-full"
-            >
-              Pedir por WhatsApp<span className="sr-only"> (abre WhatsApp)</span>
-            </a>
-          ) : (
-            <p className="rounded-md bg-surface p-3 text-sm">Esta tienda aún no recibe pedidos (vista previa).</p>
-          )}
-          {sent && (
-            <div role="status" className="grid gap-2 rounded-md bg-surface p-3 text-sm">
-              <p>¿Ya enviaste el mensaje en WhatsApp?</p>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => {
-                  clear(store.id);
-                  setOpen(false);
-                }}
+          {/* Total y botón siempre a la vista al fondo del diálogo. */}
+          <div className="sticky bottom-0 -mx-5 -mb-5 grid gap-3 border-t border-border bg-bg px-5 pb-5 pt-4">
+            <p className="ja-num flex justify-between text-lg">
+              <span className="font-bold">Total</span>
+              <strong className="mt-price text-xl">{formatCOP(total)}</strong>
+            </p>
+            <p className="text-sm text-fg-muted">El vendedor confirmará disponibilidad y precio final por WhatsApp.</p>
+            {canOrder ? (
+              <a
+                href={href}
+                target="_blank"
+                rel="noopener"
+                onClick={onOrder}
+                className="ja-btn ja-btn--wa ja-btn--lg w-full"
               >
-                Sí, vaciar el carrito
-              </Button>
-            </div>
-          )}
+                Pedir por WhatsApp<span className="sr-only"> (abre WhatsApp)</span>
+              </a>
+            ) : (
+              <p className="rounded-md bg-surface p-3 text-sm">Esta tienda aún no recibe pedidos (vista previa).</p>
+            )}
+            {sent && (
+              <div role="status" className="grid gap-2 rounded-md bg-surface p-3 text-sm">
+                <p>¿Ya enviaste el mensaje en WhatsApp?</p>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    clear(store.id);
+                    setOpen(false);
+                  }}
+                >
+                  Sí, vaciar el carrito
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
       </dialog>
     </>
