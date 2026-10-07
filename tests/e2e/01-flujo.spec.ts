@@ -169,7 +169,7 @@ test("el cliente ve la tienda, arma el carrito y pide por WhatsApp", async ({ br
 
   await torta.getByRole("button", { name: /Agregar/ }).click();
   await torta.getByRole("button", { name: /Agregar/ }).click();
-  await expect(page.getByText("2 productos")).toBeVisible();
+  await expect(page.locator(".mt-cartbar")).toContainText("2 productos"); // la cabecera del catálogo también dice "2 productos"
   await page.getByRole("button", { name: "Pedir por WhatsApp" }).click();
   const dialog = page.getByRole("dialog", { name: "Tu pedido" });
   await dialog.getByLabel(/Tu nombre/).fill("Ana");
@@ -194,7 +194,7 @@ test("el cliente ve la tienda, arma el carrito y pide por WhatsApp", async ({ br
 
   // El carrito sobrevive a recargar la página (localStorage, por tienda).
   await page.reload();
-  await expect(page.getByText("2 productos")).toBeVisible();
+  await expect(page.locator(".mt-cartbar")).toContainText("2 productos"); // la cabecera del catálogo también dice "2 productos"
   await page.goto(`/${slug}/${productId}`);
   await expect(page.getByRole("heading", { level: 1, name: "Torta de chocolate" })).toBeVisible();
 
@@ -310,7 +310,7 @@ test("otro vendedor no puede abrir ni editar productos ajenos", async ({ page })
 test("mi cuenta: cambiar la contraseña (y volver a la original) y pedir cambio de correo", async ({ page }) => {
   await login(page, other, "/panel/cuenta");
   await expect(page.getByRole("heading", { level: 1, name: "Mi cuenta" })).toBeVisible();
-  await expect(page.getByText(other)).toBeVisible();
+  await expect(page.getByText(other).first()).toBeVisible();
 
   const changePassword = async (current: string, next: string) => {
     await page.getByLabel("Contraseña actual").fill(current);
@@ -418,7 +418,7 @@ test("ventas: exportar a Excel descarga un .xlsx con las filas y el total", asyn
   const download = page.waitForEvent("download");
   await page.getByRole("button", { name: "Exportar a Excel" }).click();
   const file = await download;
-  expect(file.suggestedFilename()).toMatch(new RegExp(`^ventas-${slug}-\d{4}-\d{2}-\d{2}\.xlsx$`));
+  expect(file.suggestedFilename()).toMatch(new RegExp(String.raw`^ventas-${slug}-\d{4}-\d{2}-\d{2}\.xlsx$`));
   const ExcelJS = (await import("exceljs")).default;
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.readFile(await file.path());

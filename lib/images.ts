@@ -121,7 +121,15 @@ export async function compressToWebp(
 
   for (const method of deps.methods) {
     try {
-      return await method.run(source, maxSide);
+      // Si ni con la calidad más baja queda bajo el tope (fotos con mucho detalle o ruido),
+      // se reduce el tamaño un 20 % por vuelta, sin bajar de 960 px de lado.
+      let side = maxSide;
+      let out = await method.run(source, side);
+      while (out.size > LIMITS.imageMaxKB * 1024 && side > 960) {
+        side = Math.max(960, Math.round(side * 0.8));
+        out = await method.run(source, side);
+      }
+      return out;
     } catch (e) {
       note(method.name, e);
     }

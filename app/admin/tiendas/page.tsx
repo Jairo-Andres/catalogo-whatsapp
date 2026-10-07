@@ -132,7 +132,7 @@ export default async function AdminTiendasPage() {
           </ul>
 
           {/* Escritorio: tabla */}
-          <div className="ja-table-wrap hidden lg:block">
+          <div className="ja-table-wrap hidden lg:block" role="region" aria-label="Tabla de tiendas" tabIndex={0}>
             <table className="ja-table">
               <caption className="sr-only">
                 Tiendas con su vendedor, fotos y espacio usado. Las pendientes aparecen primero.

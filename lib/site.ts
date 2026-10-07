@@ -21,4 +21,5 @@ export const LIMITS = {
   imagesPerProduct: 3,
   imageMaxSide: 1600,
   imageTargetKB: 300,
+  imageMaxKB: 400,
 } as const;

@@ -503,15 +503,21 @@ describe("administración", () => {
   });
 
   it("admin_store_usage: correo, fotos y espacio por tienda, solo para el admin", async () => {
-    const usage = () => as(db, ADMIN(), async () => (await db.query(`select * from public.admin_store_usage()`)).rows);
-    const before = (await usage()).find((r) => r.store_id === ids.storeA);
-    await db.query(
-      `insert into storage.objects (bucket_id, name, metadata) values
-         ('catalogo', $1 || '/productos/uso-1.webp', '{"size": 1500}'),
-         ('catalogo', $1 || '/marca/uso-2.webp', '{"size": 500}')`,
-      [ids.storeA],
-    );
-    const rows = await usage();
+    // Todo en una transacción que se revierte: los archivos de prueba no quedan guardados
+    // (Supabase no deja borrar filas de storage.objects directo, y afectarían otras pruebas).
+    const { before, rows } = await as(db, ADMIN(), async () => {
+      const usage = async () => (await db.query(`select * from public.admin_store_usage()`)).rows;
+      const before = (await usage()).find((r) => r.store_id === ids.storeA);
+      await db.query(`reset role`);
+      await db.query(
+        `insert into storage.objects (bucket_id, name, metadata) values
+           ('catalogo', $1 || '/productos/uso-1.webp', '{"size": 1500}'),
+           ('catalogo', $1 || '/marca/uso-2.webp', '{"size": 500}')`,
+        [ids.storeA],
+      );
+      await db.query(`set local role authenticated`);
+      return { before, rows: await usage() };
+    });
     const a = rows.find((r) => r.store_id === ids.storeA);
     expect(a.owner_email).toBe("a@example.test");
     expect(Number(a.storage_files) - Number(before.storage_files)).toBe(2);
